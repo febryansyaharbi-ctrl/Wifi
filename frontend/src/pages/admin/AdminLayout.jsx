@@ -1,0 +1,96 @@
+import { useState } from "react";
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
+import { useTenant } from "@/context/TenantContext";
+import { BrandLogo } from "@/components/Brand";
+import {
+  LayoutDashboard, Map, Package, Users, Palette, UserCog,
+  Building2, CreditCard, Settings, LogOut, Menu, X,
+} from "lucide-react";
+
+const NAV = [
+  { to: "/admin", label: "Dashboard", icon: LayoutDashboard, testid: "admin-sidebar-nav-dashboard", end: true },
+  { to: "/admin/coverage", label: "Coverage", icon: Map, testid: "admin-sidebar-nav-coverage" },
+  { to: "/admin/packages", label: "Paket", icon: Package, testid: "admin-sidebar-nav-packages" },
+  { to: "/admin/leads", label: "Leads", icon: Users, testid: "admin-sidebar-nav-leads" },
+  { to: "/admin/branding", label: "Branding", icon: Palette, testid: "admin-sidebar-nav-branding" },
+  { to: "/admin/account", label: "Akun", icon: UserCog, testid: "admin-sidebar-nav-account" },
+];
+
+const SUPER_NAV = [
+  { label: "Tenants", icon: Building2 },
+  { label: "Billing", icon: CreditCard },
+  { label: "System Settings", icon: Settings },
+];
+
+export default function AdminLayout() {
+  const { user, logout } = useAuth();
+  const { tenant } = useTenant();
+  const nav = useNavigate();
+  const [open, setOpen] = useState(false);
+
+  const doLogout = async () => { await logout(); nav("/login", { replace: true }); };
+
+  const SidebarInner = () => (
+    <>
+      <div className="h-16 flex items-center px-5 border-b border-slate-200">
+        <BrandLogo tenant={tenant} size={32} />
+      </div>
+      <nav className="flex-1 overflow-y-auto p-3 space-y-1">
+        {NAV.map((n) => (
+          <NavLink key={n.to} to={n.to} end={n.end} data-testid={n.testid} onClick={() => setOpen(false)}
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition ${
+                isActive ? "text-white" : "text-slate-600 hover:bg-slate-100"}`}
+            style={({ isActive }) => (isActive ? { background: "hsl(var(--primary))" } : {})}>
+            <n.icon size={18} /> {n.label}
+          </NavLink>
+        ))}
+        {user?.role === "SUPER_ADMIN" && (
+          <div className="pt-4 mt-3 border-t border-slate-200">
+            <p className="px-3 text-[11px] font-semibold uppercase tracking-wide text-slate-400 mb-1">Super Admin</p>
+            {SUPER_NAV.map((n) => (
+              <div key={n.label} className="flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 cursor-not-allowed">
+                <span className="flex items-center gap-3"><n.icon size={18} /> {n.label}</span>
+                <span className="text-[10px] bg-slate-100 rounded px-1.5 py-0.5">Fase 2</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </nav>
+      <div className="p-3 border-t border-slate-200">
+        <div className="px-3 py-2 mb-1">
+          <p className="text-sm font-semibold text-slate-900 truncate">{user?.name}</p>
+          <p className="text-xs text-slate-400 truncate">{user?.email}</p>
+          <span className="inline-block mt-1 text-[10px] font-semibold rounded px-1.5 py-0.5" style={{ background: "hsl(var(--accent))", color: "hsl(var(--accent-foreground))" }}>{user?.role}</span>
+        </div>
+        <button onClick={doLogout} data-testid="admin-logout-button"
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-rose-600 hover:bg-rose-50 transition">
+          <LogOut size={18} /> Keluar
+        </button>
+      </div>
+    </>
+  );
+
+  return (
+    <div className="min-h-screen flex bg-slate-50">
+      <aside className="hidden lg:flex w-64 flex-col bg-white border-r border-slate-200 fixed inset-y-0">
+        <SidebarInner />
+      </aside>
+      {open && (
+        <div className="lg:hidden fixed inset-0 z-50 flex">
+          <div className="w-64 bg-white flex flex-col animate-fade-up"><SidebarInner /></div>
+          <div className="flex-1 bg-slate-900/50" onClick={() => setOpen(false)} />
+        </div>
+      )}
+      <div className="flex-1 lg:ml-64 min-w-0">
+        <header className="lg:hidden h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 sticky top-0 z-30">
+          <button onClick={() => setOpen(true)} data-testid="admin-mobile-menu"><Menu size={24} /></button>
+          <BrandLogo tenant={tenant} size={28} />
+          <span className="w-6" />
+        </header>
+        <main className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto"><Outlet /></main>
+      </div>
+    </div>
+  );
+}
