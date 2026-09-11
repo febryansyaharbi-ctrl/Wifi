@@ -16,7 +16,7 @@ import AccountPage from "@/pages/admin/AccountPage";
 function Protected({ children }) {
   const { user, checking } = useAuth();
   if (checking) return <div className="min-h-screen grid place-items-center text-slate-400">Memuat…</div>;
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) return <Navigate to="/admin/login" replace />;
   return children;
 }
 
@@ -30,7 +30,8 @@ function App() {
             <Routes>
               <Route path="/" element={<Landing />} />
               <Route path="/t/:subdomain" element={<Landing />} />
-              <Route path="/login" element={<Login />} />
+              <Route path="/admin/login" element={<Login />} />
+              <Route path="/login" element={<Navigate to="/admin/login" replace />} />
               <Route path="/admin" element={<Protected><AdminLayout /></Protected>}>
                 <Route index element={<Dashboard />} />
                 <Route path="coverage" element={<CoveragePage />} />

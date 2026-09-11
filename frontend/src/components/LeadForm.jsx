@@ -18,7 +18,6 @@ export default function LeadForm({ open, onClose, onCreated }) {
     setLoading(true);
     try {
       const { data } = await api.post("/leads", { name: name.trim(), phone: phone.trim(), ...tenantParams() });
-      toast.success("Data tersimpan. Silakan tentukan lokasi Anda.");
       onCreated(data);
     } catch (err) {
       toast.error(formatApiError(err.response?.data?.detail));
@@ -67,7 +66,7 @@ export default function LeadForm({ open, onClose, onCreated }) {
             <p className="text-xs text-slate-400 mt-1.5">Format: 08xx, 62xx, atau +62xx</p>
           </div>
           <PrimaryButton type="submit" disabled={loading} className="w-full !py-3.5" data-testid="lead-form-submit-button">
-            {loading ? "Menyimpan…" : "Lanjutkan ke Peta Jangkauan"} <ArrowRight size={18} />
+            {loading ? "Tunggu sebentar…" : "Lanjutkan ke Peta Jangkauan"} <ArrowRight size={18} />
           </PrimaryButton>
         </form>
       </div>
