@@ -1,5 +1,8 @@
 import asyncio
 import logging
+import json
+import urllib.parse
+import urllib.request
 from datetime import datetime, timezone
 
 from database import db
@@ -74,6 +77,33 @@ async def _insert_batch(batch):
         return 0
 
 
+def _reverse_geocode_city_sync(lat: float, lng: float):
+    """Best-effort city/kabupaten lookup from coordinates using OpenStreetMap Nominatim."""
+    params = urllib.parse.urlencode({"format": "jsonv2", "lat": lat, "lon": lng, "zoom": 10})
+    req = urllib.request.Request(
+        f"https://nominatim.openstreetmap.org/reverse?{params}",
+        headers={"User-Agent": "WifiCoverageApp/1.0"},
+    )
+    with urllib.request.urlopen(req, timeout=4) as response:
+        data = json.loads(response.read().decode("utf-8"))
+    address = data.get("address") or {}
+    return (
+        address.get("city")
+        or address.get("town")
+        or address.get("municipality")
+        or address.get("county")
+        or address.get("village")
+    )
+
+
+async def reverse_geocode_city(lat: float, lng: float):
+    try:
+        return await asyncio.to_thread(_reverse_geocode_city_sync, lat, lng)
+    except Exception as exc:
+        logger.warning("Reverse geocoding failed: %s", str(exc)[:160])
+        return None
+
+
 async def check_coverage(tenant_id, lat: float, lng: float):
     """Server-side coverage check using MongoDB 2dsphere $geoNear."""
     pipeline = [
@@ -97,10 +127,11 @@ async def check_coverage(tenant_id, lat: float, lng: float):
         }
     d = docs[0]
     distance = d.get("distance", 999999)
+    city = await reverse_geocode_city(lat, lng)
     covered = distance <= COVERAGE_TOLERANCE_M
     return {
         "coverage_status": "COVERED" if covered else "NOT_COVERED",
         "distance_to_coverage": round(distance, 2),
         "matched_coverage_area": d.get("name") or d.get("source_file"),
-        "city": d.get("folder"),
+        "city": city or d.get("folder"),
     }
