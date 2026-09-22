@@ -72,7 +72,7 @@ class BrandingUpdate(BaseModel):
 
 
 @router.get("/branding")
-async def get_branding(user: dict = Depends(get_current_user)):
+async def get_branding(user: dict = Depends(require_active_subscription)):
     t = await db.tenants.find_one({"id": user["tenant_id"]}, {"_id": 0})
     if not t:
         raise HTTPException(status_code=404, detail="Tenant tidak ditemukan")
@@ -80,7 +80,7 @@ async def get_branding(user: dict = Depends(get_current_user)):
 
 
 @router.put("/branding")
-async def update_branding(body: BrandingUpdate, user: dict = Depends(get_current_user)):
+async def update_branding(body: BrandingUpdate, user: dict = Depends(require_active_subscription)):
     updates = {k: v for k, v in body.model_dump().items() if v is not None}
     if not updates:
         raise HTTPException(status_code=400, detail="Tidak ada perubahan")
