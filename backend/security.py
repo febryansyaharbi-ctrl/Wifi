@@ -98,6 +98,35 @@ def require_roles(*roles):
     return checker
 
 
+async def require_active_subscription(user: dict = Depends(get_current_user)):
+    """Block tenant features for expired SubAdmin billing; Super Admin is never blocked."""
+    if user.get("role") != SUB_ADMIN:
+        return user
+
+    subscription = await db.subscriptions.find_one(
+        {"tenant_id": user["tenant_id"]},
+        {"_id": 0, "status": 1, "expires_at": 1},
+    )
+    if not subscription:
+        raise HTTPException(status_code=402, detail="Akun nonaktif. Billing belum dikonfigurasi.")
+
+    status = subscription.get("status")
+    expires_at = subscription.get("expires_at")
+    active = status in {"ACTIVE", "TRIAL"} and bool(expires_at)
+
+    if active:
+        try:
+            expires_dt = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
+            active = expires_dt > datetime.now(timezone.utc)
+        except (TypeError, ValueError):
+            active = False
+
+    if not active:
+        raise HTTPException(status_code=402, detail="Akun nonaktif. Billing telah berakhir.")
+
+    return user
+
+
 # ---- Brute force protection ----
 MAX_ATTEMPTS = 5
 LOCK_MINUTES = 15
