@@ -78,6 +78,23 @@ async def seed_core():
             })
         logger.info("Seeded demo packages")
 
+    tenants = await db.tenants.find({}, {"_id": 0, "id": 1}).to_list(1000)
+    for tenant_doc in tenants:
+        if not await db.subscriptions.find_one({"tenant_id": tenant_doc["id"]}):
+            await db.subscriptions.insert_one({
+                "id": str(uuid.uuid4()),
+                "tenant_id": tenant_doc["id"],
+                "plan_id": None,
+                "plan_name": None,
+                "status": "NOT_CONFIGURED",
+                "started_at": None,
+                "expires_at": None,
+                "notes": None,
+                "created_at": now,
+                "updated_at": now,
+            })
+    logger.info("Billing subscription foundation checked")
+
 
 async def seed_gis():
     """Import the four initial GIS files into the default tenant (idempotent, sequential)."""
