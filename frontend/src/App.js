@@ -60,7 +60,9 @@ function SubscriptionGuard({ children }) {
     return <div className="min-h-screen grid place-items-center text-slate-400">Memeriksa status billing…</div>;
   }
 
+  const tenantActive = subscription?.tenant_status !== "LOCKED";
   const active = Boolean(subscription?.is_active) &&
+    tenantActive &&
     (!subscription?.expires_at || new Date(subscription.expires_at).getTime() > Date.now());
 
   if (user?.role === "SUB_ADMIN" && !active) {
@@ -78,7 +80,9 @@ function SubscriptionGuard({ children }) {
             </p>
           )}
           <p className="mt-1 text-xs text-slate-400">
-            Silakan hubungi Super Admin untuk memperpanjang billing.
+            {subscription?.tenant_status === "LOCKED"
+              ? "Tenant sedang dinonaktifkan. Hubungi Super Admin untuk mengaktifkannya kembali."
+              : "Silakan hubungi Super Admin untuk memperpanjang billing."}
           </p>
           <button
             onClick={() => window.location.reload()}
