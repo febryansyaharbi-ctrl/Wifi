@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import { useTenant } from "@/context/TenantContext";
+import { useAuth } from "@/context/AuthContext";
 import { api, tenantParams } from "@/lib/api";
 import { formatIDR, waLink } from "@/lib/format";
 import { BrandLogo, PrimaryButton } from "@/components/Brand";
@@ -10,6 +11,7 @@ import { MapPin, Zap, ShieldCheck, MessageCircle, Wifi, ArrowRight, Signal, Gaug
 
 export default function Landing() {
   const { tenant, loading } = useTenant();
+  const { user } = useAuth();
   const [packages, setPackages] = useState([]);
   const [showLead, setShowLead] = useState(false);
   const [lead, setLead] = useState(null);
@@ -196,9 +198,9 @@ export default function Landing() {
               <MessageCircle size={18} /> Hubungi via WhatsApp
             </a>
             <p className="text-xs text-slate-500 mt-4">© {new Date().getFullYear()} {tenant?.name || "WiFi Coverage"}. Semua hak dilindungi.</p>
-            <Link to="/admin/login" data-testid="footer-admin-login-link"
-                  className="inline-block text-xs text-slate-500 hover:text-slate-300 mt-2 underline underline-offset-2">
-              Login Admin
+            <Link to={user ? "/admin" : "/admin/login"} data-testid="footer-admin-link"
+                  className="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-slate-300 mt-2 underline underline-offset-2">
+              {user ? "Dashboard Admin" : "Login Admin"}
             </Link>
           </div>
         </div>
