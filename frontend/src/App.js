@@ -72,7 +72,7 @@ function SubscriptionGuard({ children }) {
           <div className="mx-auto mb-4 w-14 h-14 rounded-full bg-rose-50 grid place-items-center text-rose-600 text-2xl">🔒</div>
           <h1 className="text-xl font-bold text-slate-900">Akun Nonaktif</h1>
           <p className="mt-2 text-sm leading-6 text-slate-500">
-            Akses dashboard dan seluruh fitur sementara dikunci karena masa billing telah berakhir.
+            Akses dashboard dan seluruh fitur sementara dikunci karena akun tenant sedang nonaktif atau billing tidak aktif.
           </p>
           {subscription?.plan_name && (
             <p className="mt-4 text-sm font-semibold text-slate-700">
