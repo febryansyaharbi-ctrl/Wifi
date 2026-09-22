@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
-import { Building2, Plus, Power, X, CreditCard } from "lucide-react";
+import { Building2, Plus, Power, X, CreditCard, Trash2 } from "lucide-react";
 
 const emptyForm = {
   name: "", subdomain: "", admin_name: "", admin_email: "",
@@ -51,6 +51,21 @@ export default function TenantsPage() {
     } catch (e) {
       setMessage(e?.response?.data?.detail || "Gagal membuat tenant");
     } finally { setBusy(false); }
+  };
+
+  const removeTenant = async (tenant) => {
+    if (tenant.is_default) return;
+    const ok = window.confirm(
+      `Hapus tenant "${tenant.name}" beserta akun SubAdmin, billing, leads, paket internet, dan data coverage? Tindakan ini tidak dapat dibatalkan.`
+    );
+    if (!ok) return;
+    try {
+      await api.delete("/tenants/" + tenant.id);
+      setMessage("Tenant berhasil dihapus.");
+      await load();
+    } catch (e) {
+      setMessage(e?.response?.data?.detail || "Gagal menghapus tenant");
+    }
   };
 
   const toggle = async (tenant) => {
@@ -142,9 +157,14 @@ export default function TenantsPage() {
                     <CreditCard size={16} /> Subscription
                   </button>
                   {!t.is_default && (
-                    <button onClick={() => toggle(t)} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50">
-                      <Power size={16} /> {t.status === "ACTIVE" ? "Nonaktifkan" : "Aktifkan"}
-                    </button>
+                    <>
+                      <button onClick={() => toggle(t)} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50">
+                        <Power size={16} /> {t.status === "ACTIVE" ? "Nonaktifkan" : "Aktifkan"}
+                      </button>
+                      <button onClick={() => removeTenant(t)} className="inline-flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700 hover:bg-rose-100">
+                        <Trash2 size={16} /> Hapus
+                      </button>
+                    </>
                   )}
                 </div>
               </div>
