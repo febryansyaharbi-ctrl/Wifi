@@ -51,6 +51,14 @@ class BrandingUpdate(BaseModel):
     logo_url: Optional[str] = None
 
 
+@router.get("/branding")
+async def get_branding(user: dict = Depends(get_current_user)):
+    t = await db.tenants.find_one({"id": user["tenant_id"]}, {"_id": 0})
+    if not t:
+        raise HTTPException(status_code=404, detail="Tenant tidak ditemukan")
+    return public_tenant(t)
+
+
 @router.put("/branding")
 async def update_branding(body: BrandingUpdate, user: dict = Depends(get_current_user)):
     updates = {k: v for k, v in body.model_dump().items() if v is not None}
