@@ -1,14 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api";
-import { useTenant, applyPrimaryColor } from "@/context/TenantContext";
+import { applyPrimaryColor } from "@/context/TenantContext";
 import { toast } from "sonner";
 import { Upload, Loader2, Wifi } from "lucide-react";
 
 const PRESETS = ["#6D28D9", "#2563EB", "#059669", "#DC2626", "#EA580C", "#0891B2", "#DB2777", "#4F46E5"];
 
 export default function BrandingPage() {
-  const { tenant: contextTenant, refresh } = useTenant();
   const [tenant, setTenant] = useState(null);
+  const [loadError, setLoadError] = useState("");
   const [form, setForm] = useState(null);
   const [saving, setSaving] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
@@ -16,13 +16,14 @@ export default function BrandingPage() {
 
   useEffect(() => {
     let active = true;
-    api.get("/tenant/me").then(({ data }) => {
+    setLoadError("");
+    api.get("/branding").then(({ data }) => {
       if (active) setTenant(data);
-    }).catch(() => {
-      if (active) setTenant(contextTenant || null);
+    }).catch((err) => {
+      if (active) setLoadError(err.response?.data?.detail || "Gagal memuat branding.");
     });
     return () => { active = false; };
-  }, [contextTenant]);
+  }, []);
 
   useEffect(() => {
     if (tenant) setForm({
@@ -32,7 +33,7 @@ export default function BrandingPage() {
     });
   }, [tenant]);
 
-  if (!form) return <div className="text-slate-400">Memuat…</div>;
+  if (!form) return <div className="text-slate-400">{loadError || "Memuat…"}</div>;
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
 
   const pickColor = (c) => { setForm({ ...form, primary_color: c }); applyPrimaryColor(c); };
@@ -44,7 +45,8 @@ export default function BrandingPage() {
         wifi_name: form.wifi_name, website_title: form.website_title, description: form.description,
         primary_color: form.primary_color, whatsapp_number: form.whatsapp_number,
       });
-      await refresh();
+      const { data } = await api.get("/branding");
+      setTenant(data);
       toast.success("Branding berhasil disimpan.");
     } catch (e) { toast.error(e.response?.data?.detail || "Gagal menyimpan."); }
     finally { setSaving(false); }
@@ -58,7 +60,8 @@ export default function BrandingPage() {
     try {
       const { data } = await api.post("/branding/logo", fd, { headers: { "Content-Type": "multipart/form-data" } });
       setForm((f) => ({ ...f, logo_url: data.logo_url }));
-      await refresh();
+      const { data } = await api.get("/branding");
+      setTenant(data);
       toast.success("Logo diperbarui.");
     } catch (err) { toast.error(err.response?.data?.detail || "Gagal mengunggah logo."); }
     finally { setUploadingLogo(false); }
