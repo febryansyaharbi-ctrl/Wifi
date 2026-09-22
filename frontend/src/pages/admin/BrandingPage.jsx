@@ -60,8 +60,8 @@ export default function BrandingPage() {
     try {
       const { data } = await api.post("/branding/logo", fd, { headers: { "Content-Type": "multipart/form-data" } });
       setForm((f) => ({ ...f, logo_url: data.logo_url }));
-      const { data } = await api.get("/branding");
-      setTenant(data);
+      const brandingResponse = await api.get("/branding");
+      setTenant(brandingResponse.data);
       toast.success("Logo diperbarui.");
     } catch (err) { toast.error(err.response?.data?.detail || "Gagal mengunggah logo."); }
     finally { setUploadingLogo(false); }
