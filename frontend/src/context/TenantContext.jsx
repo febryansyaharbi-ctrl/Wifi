@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
-import { api, tenantParams } from "@/lib/api";
+import { api, tenantParams, currentSubdomain } from "@/lib/api";
 import { hexToHslString } from "@/lib/format";
 
 const TenantContext = createContext(null);
@@ -29,7 +29,7 @@ export function TenantProvider({ children }) {
     }
   }, []);
 
-  useEffect(() => { refresh(); }, [refresh]);
+  // Refresh tenant config whenever the public tenant path changes.\n  // This is important when navigating from /admin to /t/{subdomain}\n  // without a full browser reload.\n  const tenantKey = currentSubdomain() || "default";\n  useEffect(() => { refresh(); }, [refresh, tenantKey]);
 
   return (
     <TenantContext.Provider value={{ tenant, loading, refresh, setTenant }}>
