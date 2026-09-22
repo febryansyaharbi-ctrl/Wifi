@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from typing import Optional
 
 from database import db
-from security import resolve_tenant, get_current_user, require_roles, SUPER_ADMIN, audit_log
+from security import resolve_tenant, get_current_user, require_active_subscription, require_roles, SUPER_ADMIN, audit_log
 from datetime import datetime, timezone
 
 router = APIRouter(prefix="/api", tags=["tenant"])
@@ -25,7 +25,7 @@ def public_tenant(t: dict) -> dict:
 
 
 @router.get("/tenant/me")
-async def tenant_me(user: dict = Depends(get_current_user)):
+async def tenant_me(user: dict = Depends(require_active_subscription)):
     t = await db.tenants.find_one({"id": user["tenant_id"]}, {"_id": 0})
     if not t:
         raise HTTPException(status_code=404, detail="Tenant tidak ditemukan")
