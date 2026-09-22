@@ -2,7 +2,7 @@ import base64
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 
 from database import db
-from security import get_current_user, audit_log
+from security import get_current_user, require_active_subscription, audit_log
 from datetime import datetime, timezone
 
 router = APIRouter(prefix="/api", tags=["dashboard"])
@@ -11,7 +11,7 @@ MAX_LOGO_BYTES = 2 * 1024 * 1024
 
 
 @router.get("/dashboard")
-async def dashboard(user: dict = Depends(get_current_user)):
+async def dashboard(user: dict = Depends(require_active_subscription)):
     tid = user["tenant_id"]
     leads_total = await db.leads.count_documents({"tenant_id": tid})
     covered = await db.leads.count_documents({"tenant_id": tid, "coverage_status": "COVERED"})
