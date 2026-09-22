@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
 import { waLink } from "@/lib/format";
 import { StatusBadge } from "@/pages/admin/Dashboard";
-import { Search, MessageCircle, ChevronLeft, ChevronRight, MapPin } from "lucide-react";
+import { Search, MessageCircle, ChevronLeft, ChevronRight, MapPin, Download, Trash2 } from "lucide-react";
 
 const STATUSES = ["ALL", "NOT_CHECKED", "COVERED", "NOT_COVERED"];
 const STATUS_LABEL = { ALL: "Semua", NOT_CHECKED: "Belum Dicek", COVERED: "Tercover", NOT_COVERED: "Belum Tercover" };
@@ -29,10 +29,54 @@ export default function LeadsPage() {
 
   const totalPages = Math.max(1, Math.ceil(data.total / data.limit));
 
+  const currentParams = () => {
+    const params = {};
+    if (search) params.search = search;
+    if (status !== "ALL") params.status = status;
+    if (dateFrom) params.date_from = dateFrom;
+    if (dateTo) params.date_to = dateTo;
+    return params;
+  };
+
+  const handleDelete = async (lead) => {
+    if (!window.confirm(`Hapus DataLead "${lead.name}"? Data yang dihapus tidak dapat dikembalikan.`)) return;
+    try {
+      await api.delete(`/leads/${lead.id}`);
+      await load();
+    } catch (error) {
+      window.alert(error?.response?.data?.detail || "DataLead gagal dihapus.");
+    }
+  };
+
+  const handleExport = async () => {
+    try {
+      const response = await api.get("/leads/export", { params: currentParams(), responseType: "blob" });
+      const url = window.URL.createObjectURL(new Blob([response.data], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }));
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "DataLead.xlsx";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      window.alert(error?.response?.data?.detail || "Export DataLead gagal.");
+    }
+  };
+
   return (
     <div>
-      <h1 className="font-display text-2xl sm:text-3xl font-bold text-slate-900">Leads</h1>
-      <p className="text-slate-500 mt-1">Daftar calon pelanggan yang mengecek coverage.</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h1 className="font-display text-2xl sm:text-3xl font-bold text-slate-900">Leads</h1>
+          <p className="text-slate-500 mt-1">Daftar calon pelanggan yang mengecek coverage.</p>
+        </div>
+        <button onClick={handleExport} data-testid="leads-export-button"
+                className="inline-flex items-center justify-center gap-2 h-11 px-4 rounded-xl text-white font-semibold"
+                style={{ background: "hsl(var(--primary))" }}>
+          <Download size={17} /> Export Excel
+        </button>
+      </div>
 
       <div className="mt-6 flex flex-wrap gap-3 items-center">
         <div className="relative flex-1 min-w-[200px]">
@@ -76,7 +120,12 @@ export default function LeadsPage() {
                   <td className="px-4 py-3 text-slate-500">{l.city || "-"}</td>
                   <td className="px-4 py-3 text-slate-500 whitespace-nowrap">{new Date(l.created_at).toLocaleDateString("id-ID")}</td>
                   <td className="px-4 py-3">
-                    <a href={waLink(l.phone, `Halo ${l.name}`)} target="_blank" rel="noreferrer" className="p-2 rounded-lg hover:bg-emerald-50 text-emerald-600 inline-flex"><MessageCircle size={16} /></a>
+                    <div className="flex items-center gap-1">
+                      <a href={waLink(l.phone, `Halo ${l.name}`)} target="_blank" rel="noreferrer" className="p-2 rounded-lg hover:bg-emerald-50 text-emerald-600 inline-flex" title="WhatsApp"><MessageCircle size={16} /></a>
+                      <button onClick={() => handleDelete(l)} className="p-2 rounded-lg hover:bg-red-50 text-red-500 inline-flex" title="Hapus" aria-label={`Hapus ${l.name}`}>
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
