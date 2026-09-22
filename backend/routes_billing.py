@@ -138,14 +138,39 @@ async def update_subscription(
     if body.status not in VALID_STATUSES:
         raise HTTPException(status_code=400, detail="Status subscription tidak valid")
 
+    plan = None
+    if body.plan_id:
+        plan = await db.subscription_plans.find_one({"id": body.plan_id}, {"_id": 0})
+        if not plan:
+            raise HTTPException(status_code=404, detail="Paket subscription tidak ditemukan")
+        if not plan.get("active"):
+            raise HTTPException(status_code=400, detail="Paket subscription sedang nonaktif")
+
     existing = await db.subscriptions.find_one({"tenant_id": tenant_id})
-    now = datetime.now(timezone.utc).isoformat()
+    now_dt = datetime.now(timezone.utc)
+    now = now_dt.isoformat()
+
+    started_at = body.started_at
+    expires_at = body.expires_at
+    plan_name = body.plan_name
+
+    if plan:
+        plan_name = plan["name"]
+        if not started_at:
+            started_at = now
+        if not expires_at:
+            try:
+                started_dt = datetime.fromisoformat(started_at.replace("Z", "+00:00"))
+            except ValueError:
+                raise HTTPException(status_code=400, detail="Format started_at tidak valid")
+            expires_at = (started_dt + __import__("datetime").timedelta(days=plan["duration_days"])).isoformat()
+
     updates = {
         "plan_id": body.plan_id,
-        "plan_name": body.plan_name,
+        "plan_name": plan_name,
         "status": body.status,
-        "started_at": body.started_at,
-        "expires_at": body.expires_at,
+        "started_at": started_at,
+        "expires_at": expires_at,
         "notes": body.notes,
         "updated_at": now,
     }
