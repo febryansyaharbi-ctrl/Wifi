@@ -17,6 +17,7 @@ from routes_leads import router as leads_router
 from routes_packages import router as packages_router
 from routes_dashboard import router as dashboard_router
 from routes_tenants import router as tenants_router
+from routes_billing import router as billing_router
 from seed import run_seed
 
 
@@ -44,6 +45,7 @@ app.include_router(leads_router)
 app.include_router(packages_router)
 app.include_router(dashboard_router)
 app.include_router(tenants_router)
+app.include_router(billing_router)
 
 _frontend = os.environ.get("FRONTEND_URL", "").strip()
 _origins = [o for o in os.environ.get("CORS_ORIGINS", "").split(",") if o and o != "*"]
