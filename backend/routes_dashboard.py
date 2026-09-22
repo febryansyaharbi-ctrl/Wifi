@@ -30,7 +30,7 @@ async def dashboard(user: dict = Depends(require_active_subscription)):
 
 
 @router.post("/branding/logo")
-async def upload_logo(file: UploadFile = File(...), user: dict = Depends(get_current_user)):
+async def upload_logo(file: UploadFile = File(...), user: dict = Depends(require_active_subscription)):
     data = await file.read(MAX_LOGO_BYTES + 1)
     if len(data) > MAX_LOGO_BYTES:
         raise HTTPException(status_code=413, detail="Logo maksimal 2MB")
