@@ -5,7 +5,7 @@ from fastapi import APIRouter, Request, Depends, HTTPException, UploadFile, File
 from pydantic import BaseModel
 
 from database import db
-from security import resolve_tenant, get_current_user, audit_log
+from security import resolve_tenant, get_current_user, require_active_subscription, audit_log
 from gis_service import detect_file_type
 from coverage_service import process_file, check_coverage
 
@@ -71,7 +71,7 @@ async def public_geometries(request: Request, subdomain: Optional[str] = None,
 
 # ---------- Admin coverage management ----------
 @router.get("")
-async def list_files(user: dict = Depends(get_current_user)):
+async def list_files(user: dict = Depends(require_active_subscription)):
     files = await db.coverage_files.find(
         {"tenant_id": user["tenant_id"]}, {"_id": 0}).sort("created_at", -1).to_list(500)
     return files
