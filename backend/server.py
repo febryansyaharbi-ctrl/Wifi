@@ -16,7 +16,7 @@ from routes_coverage import router as coverage_router
 from routes_leads import router as leads_router
 from routes_packages import router as packages_router
 from routes_dashboard import router as dashboard_router
-from seed import run_seed
+from seed import run_seed\n
 
 logging.basicConfig(
     level=logging.INFO,
