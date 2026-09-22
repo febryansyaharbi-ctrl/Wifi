@@ -12,6 +12,7 @@ import PackagesPage from "@/pages/admin/PackagesPage";
 import LeadsPage from "@/pages/admin/LeadsPage";
 import BrandingPage from "@/pages/admin/BrandingPage";
 import AccountPage from "@/pages/admin/AccountPage";
+import TenantsPage from "@/pages/admin/TenantsPage";
 
 function Protected({ children }) {
   const { user, checking } = useAuth();
@@ -39,6 +40,7 @@ function App() {
                 <Route path="leads" element={<LeadsPage />} />
                 <Route path="branding" element={<BrandingPage />} />
                 <Route path="account" element={<AccountPage />} />
+                <Route path="tenants" element={<TenantsPage />} />
               </Route>
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
