@@ -1,8 +1,10 @@
+import React from "react";
 import "@/App.css";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "sonner";
 import { TenantProvider } from "@/context/TenantContext";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
+import { api } from "@/lib/api";
 import Landing from "@/pages/Landing";
 import Login from "@/pages/Login";
 import AdminLayout from "@/pages/admin/AdminLayout";
@@ -22,6 +24,77 @@ function Protected({ children }) {
   return children;
 }
 
+function SubscriptionGuard({ children }) {
+  const { user } = useAuth();
+  const [subscription, setSubscription] = React.useState(null);
+  const [checkingBilling, setCheckingBilling] = React.useState(true);
+
+  React.useEffect(() => {
+    if (user?.role !== "SUB_ADMIN") {
+      setSubscription({ is_active: true });
+      setCheckingBilling(false);
+      return;
+    }
+
+    let alive = true;
+    const load = async () => {
+      try {
+        const { data } = await api.get("/billing/me");
+        if (alive) setSubscription(data);
+      } catch {
+        if (alive) setSubscription({ is_active: false });
+      } finally {
+        if (alive) setCheckingBilling(false);
+      }
+    };
+
+    load();
+    const timer = window.setInterval(load, 15000);
+    return () => {
+      alive = false;
+      window.clearInterval(timer);
+    };
+  }, [user?.role]);
+
+  if (checkingBilling) {
+    return <div className="min-h-screen grid place-items-center text-slate-400">Memeriksa status billing…</div>;
+  }
+
+  const active = Boolean(subscription?.is_active) &&
+    (!subscription?.expires_at || new Date(subscription.expires_at).getTime() > Date.now());
+
+  if (user?.role === "SUB_ADMIN" && !active) {
+    return (
+      <div className="min-h-screen bg-slate-50 grid place-items-center p-6">
+        <div className="w-full max-w-md bg-white rounded-2xl border border-rose-100 shadow-sm p-7 text-center">
+          <div className="mx-auto mb-4 w-14 h-14 rounded-full bg-rose-50 grid place-items-center text-rose-600 text-2xl">🔒</div>
+          <h1 className="text-xl font-bold text-slate-900">Akun Nonaktif</h1>
+          <p className="mt-2 text-sm leading-6 text-slate-500">
+            Akses dashboard dan seluruh fitur sementara dikunci karena masa billing telah berakhir.
+          </p>
+          {subscription?.plan_name && (
+            <p className="mt-4 text-sm font-semibold text-slate-700">
+              Paket: {subscription.plan_name}
+            </p>
+          )}
+          <p className="mt-1 text-xs text-slate-400">
+            Silakan hubungi Super Admin untuk memperpanjang billing.
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-6 w-full rounded-xl px-4 py-2.5 text-sm font-semibold text-white"
+            style={{ background: "hsl(var(--primary))" }}
+          >
+            Cek Status Billing Lagi
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return children;
+}
+
 function App() {
   return (
     <div className="App">
@@ -34,7 +107,7 @@ function App() {
               <Route path="/t/:subdomain" element={<Landing />} />
               <Route path="/admin/login" element={<Login />} />
               <Route path="/login" element={<Navigate to="/admin/login" replace />} />
-              <Route path="/admin" element={<Protected><AdminLayout /></Protected>}>
+              <Route path="/admin" element={<Protected><SubscriptionGuard><AdminLayout /></SubscriptionGuard></Protected>}>
                 <Route index element={<Dashboard />} />
                 <Route path="coverage" element={<CoveragePage />} />
                 <Route path="packages" element={<PackagesPage />} />
