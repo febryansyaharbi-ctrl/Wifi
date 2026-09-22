@@ -104,13 +104,13 @@ async def bulk_delete_leads(body: dict, user: dict = Depends(require_active_subs
 
 
 @router.delete("/all")
-async def delete_all_leads(user: dict = Depends(get_current_user)):
+async def delete_all_leads(user: dict = Depends(require_active_subscription)):
     result = await db.leads.delete_many({"tenant_id": user["tenant_id"]})
     return {"deleted_count": result.deleted_count}
 
 
 @router.get("/export")
-async def export_leads(user: dict = Depends(get_current_user),
+async def export_leads(user: dict = Depends(require_active_subscription),
                        search: str = None, status: str = None,
                        date_from: str = None, date_to: str = None):
     query = build_lead_query(user, search, status, date_from, date_to)
@@ -158,7 +158,7 @@ async def export_leads(user: dict = Depends(get_current_user),
 
 
 @router.delete("/{lead_id}")
-async def delete_lead(lead_id: str, user: dict = Depends(get_current_user)):
+async def delete_lead(lead_id: str, user: dict = Depends(require_active_subscription)):
     result = await db.leads.delete_one({
         "id": lead_id,
         "tenant_id": user["tenant_id"],
