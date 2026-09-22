@@ -79,7 +79,7 @@ async def list_files(user: dict = Depends(require_active_subscription)):
 
 @router.post("/upload")
 async def upload_file(background: BackgroundTasks, file: UploadFile = File(...),
-                      user: dict = Depends(get_current_user)):
+                      user: dict = Depends(require_active_subscription)):
     filename = file.filename or "upload"
     ext = filename.lower().rsplit(".", 1)[-1] if "." in filename else ""
     data = await file.read(MAX_BYTES + 1)
@@ -104,7 +104,7 @@ async def upload_file(background: BackgroundTasks, file: UploadFile = File(...),
 
 
 @router.post("/{file_id}/activate")
-async def activate_file(file_id: str, user: dict = Depends(get_current_user)):
+async def activate_file(file_id: str, user: dict = Depends(require_active_subscription)):
     f = await db.coverage_files.find_one({"id": file_id, "tenant_id": user["tenant_id"]})
     if not f:
         raise HTTPException(status_code=404, detail="File tidak ditemukan")
@@ -117,7 +117,7 @@ async def activate_file(file_id: str, user: dict = Depends(get_current_user)):
 
 
 @router.post("/{file_id}/deactivate")
-async def deactivate_file(file_id: str, user: dict = Depends(get_current_user)):
+async def deactivate_file(file_id: str, user: dict = Depends(require_active_subscription)):
     f = await db.coverage_files.find_one({"id": file_id, "tenant_id": user["tenant_id"]})
     if not f:
         raise HTTPException(status_code=404, detail="File tidak ditemukan")
@@ -128,7 +128,7 @@ async def deactivate_file(file_id: str, user: dict = Depends(get_current_user)):
 
 
 @router.delete("/{file_id}")
-async def delete_file(file_id: str, user: dict = Depends(get_current_user)):
+async def delete_file(file_id: str, user: dict = Depends(require_active_subscription)):
     f = await db.coverage_files.find_one({"id": file_id, "tenant_id": user["tenant_id"]})
     if not f:
         raise HTTPException(status_code=404, detail="File tidak ditemukan")
@@ -139,7 +139,7 @@ async def delete_file(file_id: str, user: dict = Depends(get_current_user)):
 
 
 @router.get("/{file_id}/geometries")
-async def file_geometries(file_id: str, user: dict = Depends(get_current_user)):
+async def file_geometries(file_id: str, user: dict = Depends(require_active_subscription)):
     """Preview geometries for a specific file (admin, capped)."""
     f = await db.coverage_files.find_one({"id": file_id, "tenant_id": user["tenant_id"]})
     if not f:
