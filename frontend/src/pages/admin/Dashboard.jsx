@@ -15,13 +15,33 @@ function Stat({ icon: Icon, label, value, tone }) {
 
 export default function Dashboard() {
   const [d, setD] = useState(null);
-  useEffect(() => { api.get("/dashboard").then((r) => setD(r.data)).catch(() => {}); }, []);
+  const [subscription, setSubscription] = useState(null);
+  useEffect(() => {
+    api.get("/dashboard").then((r) => setD(r.data)).catch(() => {});
+    api.get("/billing/me").then((r) => setSubscription(r.data)).catch(() => {});
+  }, []);
   if (!d) return <div className="text-slate-400">Memuat…</div>;
 
   return (
     <div data-testid="admin-dashboard">
       <h1 className="font-display text-2xl sm:text-3xl font-bold text-slate-900">Dashboard</h1>
       <p className="text-slate-500 mt-1">Ringkasan aktivitas tenant Anda.</p>
+      {subscription && (
+        <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Status Billing</p>
+            <div className="mt-1 flex items-center gap-2">
+              <span className={`h-2.5 w-2.5 rounded-full ${subscription.is_active ? "bg-emerald-500" : "bg-rose-500"}`} />
+              <span className={`font-bold ${subscription.is_active ? "text-emerald-700" : "text-rose-700"}`}>
+                {subscription.is_active ? "AKUN AKTIF" : "AKUN NONAKTIF"}
+              </span>
+              {subscription.plan_name && <span className="text-sm text-slate-500">· {subscription.plan_name}</span>}
+            </div>
+          </div>
+          <BillingCountdown expiresAt={subscription.expires_at} active={subscription.is_active} />
+        </div>
+      )}
+
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
         <Stat icon={Users} label="Total Leads" value={d.leads_total} tone="bg-violet-100 text-violet-600" />
         <Stat icon={CheckCircle2} label="Tercover" value={d.covered} tone="bg-emerald-100 text-emerald-600" />
@@ -75,6 +95,27 @@ export default function Dashboard() {
       </div>
     </div>
   );
+}
+
+function BillingCountdown({ expiresAt, active }) {
+  const [remaining, setRemaining] = useState(() => getRemaining(expiresAt));
+  useEffect(() => {
+    setRemaining(getRemaining(expiresAt));
+    const timer = window.setInterval(() => setRemaining(getRemaining(expiresAt)), 1000);
+    return () => window.clearInterval(timer);
+  }, [expiresAt]);
+  if (!active || remaining <= 0) return <span className="text-sm font-semibold text-rose-600">Billing habis</span>;
+  const total = Math.floor(remaining / 1000);
+  const days = Math.floor(total / 86400);
+  const hours = Math.floor((total % 86400) / 3600);
+  const minutes = Math.floor((total % 3600) / 60);
+  const seconds = total % 60;
+  return <span className="text-sm font-semibold text-slate-700 tabular-nums">{days > 0 ? `${days} hari ${String(hours).padStart(2, "0")} jam ${String(minutes).padStart(2, "0")} menit` : `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`}</span>;
+}
+
+function getRemaining(expiresAt) {
+  if (!expiresAt) return 0;
+  return Math.max(0, new Date(expiresAt).getTime() - Date.now());
 }
 
 export function StatusBadge({ status }) {
