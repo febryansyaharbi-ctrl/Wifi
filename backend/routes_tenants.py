@@ -78,12 +78,21 @@ async def create_tenant(body: TenantCreate, user: dict = Depends(require_roles(S
         "name": body.admin_name.strip(), "role": SUB_ADMIN,
         "tenant_id": tenant_id, "created_at": now,
     }
+    subscription = {
+        "id": str(uuid.uuid4()), "tenant_id": tenant_id,
+        "plan_id": None, "plan_name": None, "status": "NOT_CONFIGURED",
+        "started_at": None, "expires_at": None, "notes": None,
+        "created_at": now, "updated_at": now,
+    }
     await db.tenants.insert_one(tenant)
     try:
         await db.users.insert_one(admin)
+        await db.subscriptions.insert_one(subscription)
     except Exception:
+        await db.users.delete_one({"id": admin["id"]})
+        await db.subscriptions.delete_one({"id": subscription["id"]})
         await db.tenants.delete_one({"id": tenant_id})
-        raise HTTPException(status_code=500, detail="Gagal membuat akun SubAdmin")
+        raise HTTPException(status_code=500, detail="Gagal membuat akun SubAdmin atau subscription")
     await audit_log(user["tenant_id"], user["id"], "TENANT_CREATE",
                     {"tenant_id": tenant_id, "subdomain": sub})
     tenant.pop("_id", None)
