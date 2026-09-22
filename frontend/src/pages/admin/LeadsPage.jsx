@@ -14,6 +14,8 @@ export default function LeadsPage() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [page, setPage] = useState(1);
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [deleteMode, setDeleteMode] = useState(false);
 
   const load = useCallback(async () => {
     const params = { page, limit: 20 };
@@ -28,6 +30,38 @@ export default function LeadsPage() {
   useEffect(() => { setPage(1); }, [search, status, dateFrom, dateTo]);
 
   const totalPages = Math.max(1, Math.ceil(data.total / data.limit));
+  const allVisibleSelected = data.leads.length > 0 && data.leads.every((l) => selectedIds.includes(l.id));
+
+  const toggleSelect = (id) => setSelectedIds((current) => current.includes(id) ? current.filter((x) => x !== id) : [...current, id]);
+  const toggleSelectVisible = () => {
+    const ids = data.leads.map((l) => l.id);
+    setSelectedIds((current) => allVisibleSelected ? current.filter((id) => !ids.includes(id)) : [...new Set([...current, ...ids])]);
+  };
+
+  const handleBulkDelete = async () => {
+    if (!selectedIds.length) return window.alert("Centang DataLead yang ingin dihapus.");
+    if (!window.confirm(`Hapus ${selectedIds.length} DataLead yang dipilih? Data yang dihapus tidak dapat dikembalikan.`)) return;
+    try {
+      await api.post("/leads/bulk-delete", { ids: selectedIds });
+      setSelectedIds([]);
+      await load();
+    } catch (error) {
+      window.alert(error?.response?.data?.detail || "DataLead gagal dihapus.");
+    }
+  };
+
+  const handleDeleteAll = async () => {
+    if (!data.total) return window.alert("Tidak ada DataLead untuk dihapus.");
+    if (!window.confirm(`HAPUS SEMUA ${data.total} DataLead tenant ini? Tindakan ini tidak dapat dibatalkan.`)) return;
+    if (!window.confirm("Konfirmasi terakhir: semua DataLead akan dihapus permanen. Lanjutkan?")) return;
+    try {
+      await api.delete("/leads/all");
+      setSelectedIds([]);
+      await load();
+    } catch (error) {
+      window.alert(error?.response?.data?.detail || "Semua DataLead gagal dihapus.");
+    }
+  };
 
   const currentParams = () => {
     const params = {};
@@ -71,12 +105,35 @@ export default function LeadsPage() {
           <h1 className="font-display text-2xl sm:text-3xl font-bold text-slate-900">Leads</h1>
           <p className="text-slate-500 mt-1">Daftar calon pelanggan yang mengecek coverage.</p>
         </div>
-        <button onClick={handleExport} data-testid="leads-export-button"
+        <div className="flex flex-wrap gap-2 justify-end">
+          <button onClick={() => setDeleteMode((v) => !v)} data-testid="leads-delete-mode-button"
+                  className={`inline-flex items-center justify-center gap-2 h-11 px-4 rounded-xl border font-semibold ${deleteMode ? "border-red-300 bg-red-50 text-red-600" : "border-slate-200 bg-white text-slate-700"}`}>
+            <Trash2 size={17} /> {deleteMode ? "Tutup Hapus" : "Kelola Hapus"}
+          </button>
+          <button onClick={handleExport} data-testid="leads-export-button"
                 className="inline-flex items-center justify-center gap-2 h-11 px-4 rounded-xl text-white font-semibold"
                 style={{ background: "hsl(var(--primary))" }}>
           <Download size={17} /> Export Excel
-        </button>
+          </button>
+        </div>
       </div>
+      {deleteMode && (
+        <div className="mt-4 rounded-2xl border border-red-100 bg-red-50/60 p-4 flex flex-wrap items-center gap-3">
+          <label className="inline-flex items-center gap-2 text-sm font-medium text-slate-700 cursor-pointer">
+            <input type="checkbox" checked={allVisibleSelected} onChange={toggleSelectVisible} />
+            Centang semua data di halaman ini
+          </label>
+          <span className="text-sm text-slate-500">{selectedIds.length} dipilih</span>
+          <button onClick={handleBulkDelete} disabled={!selectedIds.length}
+                  className="inline-flex items-center gap-2 rounded-xl bg-red-600 text-white px-4 py-2.5 font-semibold disabled:opacity-40">
+            <Trash2 size={16} /> Hapus Terpilih
+          </button>
+          <button onClick={handleDeleteAll} disabled={!data.total}
+                  className="inline-flex items-center gap-2 rounded-xl border border-red-300 bg-white text-red-600 px-4 py-2.5 font-semibold disabled:opacity-40">
+            Hapus Semua ({data.total})
+          </button>
+        </div>
+      )}
 
       <div className="mt-6 flex flex-wrap gap-3 items-center">
         <div className="relative flex-1 min-w-[200px]">
@@ -97,15 +154,16 @@ export default function LeadsPage() {
           <table className="w-full text-sm">
             <thead className="bg-slate-50 text-slate-500 text-left">
               <tr>
-                {["Nama", "Nomor", "Lokasi", "Status", "Jarak", "Kota", "Dibuat", "Aksi"].map((h) => (
+                {(deleteMode ? ["Pilih", "Nama", "Nomor", "Lokasi", "Status", "Jarak", "Kota", "Area Coverage", "Dibuat", "Aksi"] : ["Nama", "Nomor", "Lokasi", "Status", "Jarak", "Kota", "Area Coverage", "Dibuat", "Aksi"]).map((h) => (
                   <th key={h} className="px-4 py-3 font-medium whitespace-nowrap">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100" data-testid="leads-table">
-              {data.leads.length === 0 && <tr><td colSpan={8} className="px-4 py-8 text-center text-slate-400">Tidak ada data.</td></tr>}
+              {data.leads.length === 0 && <tr><td colSpan={deleteMode ? 10 : 9} className="px-4 py-8 text-center text-slate-400">Tidak ada data.</td></tr>}
               {data.leads.map((l) => (
                 <tr key={l.id} className="hover:bg-slate-50">
+                  {deleteMode && <td className="px-4 py-3"><input type="checkbox" checked={selectedIds.includes(l.id)} onChange={() => toggleSelect(l.id)} aria-label={`Pilih ${l.name}`} /></td>}
                   <td className="px-4 py-3 font-medium text-slate-900 whitespace-nowrap">{l.name}</td>
                   <td className="px-4 py-3 text-slate-600 whitespace-nowrap">{l.phone}</td>
                   <td className="px-4 py-3 text-slate-500 whitespace-nowrap">
@@ -118,13 +176,13 @@ export default function LeadsPage() {
                   <td className="px-4 py-3"><StatusBadge status={l.coverage_status} /></td>
                   <td className="px-4 py-3 text-slate-500 whitespace-nowrap">{l.coverage_distance != null ? `${Math.round(l.coverage_distance)} m` : "-"}</td>
                   <td className="px-4 py-3 text-slate-500">{l.city || "-"}</td>
+                  <td className="px-4 py-3 text-slate-500 min-w-[180px]">{l.matched_coverage_area || "-"}</td>
                   <td className="px-4 py-3 text-slate-500 whitespace-nowrap">{new Date(l.created_at).toLocaleDateString("id-ID")}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1">
-                      <a href={waLink(l.phone, `Halo ${l.name}`)} target="_blank" rel="noreferrer" className="p-2 rounded-lg hover:bg-emerald-50 text-emerald-600 inline-flex" title="WhatsApp"><MessageCircle size={16} /></a>
-                      <button onClick={() => handleDelete(l)} className="p-2 rounded-lg hover:bg-red-50 text-red-500 inline-flex" title="Hapus" aria-label={`Hapus ${l.name}`}>
-                        <Trash2 size={16} />
-                      </button>
+                      <a href={waLink(l.phone, `Halo ${l.name}`)}
+ target="_blank" rel="noreferrer" className="p-2 rounded-lg hover:bg-emerald-50 text-emerald-600 inline-flex" title="WhatsApp"><MessageCircle size={16} /></a>
+
                     </div>
                   </td>
                 </tr>
