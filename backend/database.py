@@ -20,6 +20,8 @@ async def create_indexes():
     await db.leads.create_index("created_at")
     await db.leads.create_index("coverage_status")
     await db.internet_packages.create_index([("tenant_id", 1), ("display_order", 1)])
+    await db.subscriptions.create_index("tenant_id", unique=True)
+    await db.subscriptions.create_index([("status", 1), ("expires_at", 1)])
     await db.login_attempts.create_index("identifier")
     await db.audit_logs.create_index("tenant_id")
     await db.audit_logs.create_index("created_at")
