@@ -12,7 +12,9 @@ export default function BrandingPage() {
   const [form, setForm] = useState(null);
   const [saving, setSaving] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingHero, setUploadingHero] = useState(false);
   const fileRef = useRef(null);
+  const heroFileRef = useRef(null);
 
   useEffect(() => {
     let active = true;
@@ -30,6 +32,7 @@ export default function BrandingPage() {
       wifi_name: tenant.wifi_name || "", website_title: tenant.website_title || "",
       description: tenant.description || "", primary_color: tenant.primary_color || "#6D28D9",
       whatsapp_number: tenant.whatsapp_number || "", logo_url: tenant.logo_url || null,
+      hero_image_url: tenant.hero_image_url || null,
     });
   }, [tenant]);
 
@@ -67,6 +70,21 @@ export default function BrandingPage() {
     finally { setUploadingLogo(false); }
   };
 
+  const uploadHero = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingHero(true);
+    const fd = new FormData(); fd.append("file", file);
+    try {
+      const { data } = await api.post("/branding/hero-image", fd, { headers: { "Content-Type": "multipart/form-data" } });
+      setForm((f) => ({ ...f, hero_image_url: data.hero_image_url }));
+      const brandingResponse = await api.get("/branding");
+      setTenant(brandingResponse.data);
+      toast.success("Gambar hero halaman utama diperbarui.");
+    } catch (err) { toast.error(err.response?.data?.detail || "Gagal mengunggah gambar hero."); }
+    finally { setUploadingHero(false); }
+  };
+
   return (
     <div className="max-w-3xl">
       <h1 className="font-display text-2xl sm:text-3xl font-bold text-slate-900">Branding</h1>
@@ -90,6 +108,24 @@ export default function BrandingPage() {
             </div>
             <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={uploadLogo} />
           </div>
+        </div>
+
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+          <h3 className="font-display font-semibold text-slate-900 mb-4">Gambar Besar Halaman Utama</h3>
+          <div className="rounded-2xl overflow-hidden border border-slate-200 bg-slate-50">
+            {form.hero_image_url ? (
+              <img src={form.hero_image_url} alt="Hero" className="w-full h-48 object-cover" />
+            ) : <div className="h-48 grid place-items-center text-slate-400 text-sm">Menggunakan gambar default</div>}
+          </div>
+          <div className="mt-4 flex items-center gap-3">
+            <button onClick={() => heroFileRef.current?.click()} disabled={uploadingHero}
+                    className="inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+                    style={{ background: "hsl(var(--primary))" }}>
+              {uploadingHero ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />} Ganti Gambar Hero
+            </button>
+            <p className="text-xs text-slate-400">JPG/PNG/WebP, maksimal 5MB. Gambar ini tampil besar di halaman Cek Coverage tenant.</p>
+          </div>
+          <input ref={heroFileRef} type="file" accept="image/*" className="hidden" onChange={uploadHero} />
         </div>
 
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4">
