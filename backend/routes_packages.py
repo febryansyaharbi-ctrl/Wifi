@@ -37,7 +37,7 @@ async def list_packages(user: dict = Depends(require_active_subscription)):
 
 
 @router.post("")
-async def create_package(body: PackageBody, user: dict = Depends(get_current_user)):
+async def create_package(body: PackageBody, user: dict = Depends(require_active_subscription)):
     now = datetime.now(timezone.utc).isoformat()
     doc = {"id": str(uuid.uuid4()), "tenant_id": user["tenant_id"],
            **body.model_dump(), "created_at": now, "updated_at": now}
