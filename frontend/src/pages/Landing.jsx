@@ -94,7 +94,7 @@ export default function Landing() {
             </div>
           </div>
           <div className="relative">
-            <img src="https://images.unsplash.com/photo-1629360021730-3d258452c425?crop=entropy&cs=srgb&fm=jpg&q=85&w=1200"
+            <img src={tenant?.hero_image_url || "https://images.unsplash.com/photo-1629360021730-3d258452c425?crop=entropy&cs=srgb&fm=jpg&q=85&w=1200"}
                  alt="Keluarga menikmati internet" loading="lazy"
                  className="rounded-3xl shadow-2xl object-cover w-full h-[320px] sm:h-[420px]" />
             <div className="absolute -bottom-5 -left-3 sm:left-6 bg-white rounded-2xl shadow-xl px-5 py-4 flex items-center gap-3">
