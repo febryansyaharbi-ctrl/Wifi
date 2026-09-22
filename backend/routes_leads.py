@@ -82,6 +82,22 @@ async def list_leads(user: dict = Depends(get_current_user),
     return {"total": total, "page": page, "limit": limit, "leads": docs}
 
 
+@router.post("/bulk-delete")
+async def bulk_delete_leads(body: dict, user: dict = Depends(get_current_user)):
+    ids = body.get("ids") or []
+    if not isinstance(ids, list) or not ids:
+        raise HTTPException(status_code=400, detail="Pilih minimal satu DataLead.")
+    ids = [str(x) for x in ids if x]
+    result = await db.leads.delete_many({"id": {"$in": ids}, "tenant_id": user["tenant_id"]})
+    return {"deleted_count": result.deleted_count}
+
+
+@router.delete("/all")
+async def delete_all_leads(user: dict = Depends(get_current_user)):
+    result = await db.leads.delete_many({"tenant_id": user["tenant_id"]})
+    return {"deleted_count": result.deleted_count}
+
+
 @router.get("/export")
 async def export_leads(user: dict = Depends(get_current_user),
                        search: str = None, status: str = None,
