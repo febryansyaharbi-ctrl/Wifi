@@ -13,6 +13,59 @@ router = APIRouter(prefix="/api/billing", tags=["billing"])
 VALID_STATUSES = {"NOT_CONFIGURED", "TRIAL", "ACTIVE", "EXPIRED", "LOCKED"}
 
 
+class PlanBody(BaseModel):
+    name: str = Field(min_length=2, max_length=100)
+    price: float = Field(ge=0)
+    duration_days: int = Field(ge=1, le=3650)
+    description: Optional[str] = Field(default="", max_length=1000)
+    active: bool = True
+    display_order: int = 0
+
+
+@router.get("/plans")
+async def list_plans(user: dict = Depends(require_roles(SUPER_ADMIN))):
+    return await db.subscription_plans.find({}, {"_id": 0}).sort("display_order", 1).to_list(500)
+
+
+@router.post("/plans")
+async def create_plan(body: PlanBody, user: dict = Depends(require_roles(SUPER_ADMIN))):
+    now = datetime.now(timezone.utc).isoformat()
+    doc = {
+        "id": str(uuid.uuid4()),
+        **body.model_dump(),
+        "created_at": now,
+        "updated_at": now,
+    }
+    await db.subscription_plans.insert_one(doc)
+    await audit_log(user["tenant_id"], user["id"], "SUBSCRIPTION_PLAN_CREATE", {"plan_id": doc["id"], "name": body.name})
+    doc.pop("_id", None)
+    return doc
+
+
+@router.put("/plans/{plan_id}")
+async def update_plan(plan_id: str, body: PlanBody, user: dict = Depends(require_roles(SUPER_ADMIN))):
+    existing = await db.subscription_plans.find_one({"id": plan_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Paket subscription tidak ditemukan")
+    updates = {**body.model_dump(), "updated_at": datetime.now(timezone.utc).isoformat()}
+    await db.subscription_plans.update_one({"id": plan_id}, {"$set": updates})
+    await audit_log(user["tenant_id"], user["id"], "SUBSCRIPTION_PLAN_UPDATE", {"plan_id": plan_id})
+    return await db.subscription_plans.find_one({"id": plan_id}, {"_id": 0})
+
+
+@router.delete("/plans/{plan_id}")
+async def delete_plan(plan_id: str, user: dict = Depends(require_roles(SUPER_ADMIN))):
+    existing = await db.subscription_plans.find_one({"id": plan_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Paket subscription tidak ditemukan")
+    used = await db.subscriptions.count_documents({"plan_id": plan_id})
+    if used:
+        raise HTTPException(status_code=409, detail="Paket masih digunakan oleh tenant")
+    await db.subscription_plans.delete_one({"id": plan_id})
+    await audit_log(user["tenant_id"], user["id"], "SUBSCRIPTION_PLAN_DELETE", {"plan_id": plan_id})
+    return {"ok": True}
+
+
 def public_subscription(doc: dict | None):
     if not doc:
         return None
