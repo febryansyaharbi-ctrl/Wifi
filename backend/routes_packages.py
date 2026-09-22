@@ -5,7 +5,7 @@ from fastapi import APIRouter, Request, Depends, HTTPException
 from pydantic import BaseModel
 
 from database import db
-from security import resolve_tenant, get_current_user, audit_log
+from security import resolve_tenant, get_current_user, require_active_subscription, audit_log
 
 router = APIRouter(prefix="/api/packages", tags=["packages"])
 
@@ -29,7 +29,7 @@ async def public_packages(request: Request, subdomain: Optional[str] = None):
 
 
 @router.get("")
-async def list_packages(user: dict = Depends(get_current_user)):
+async def list_packages(user: dict = Depends(require_active_subscription)):
     docs = await db.internet_packages.find(
         {"tenant_id": user["tenant_id"]}, {"_id": 0}
     ).sort("display_order", 1).to_list(200)
