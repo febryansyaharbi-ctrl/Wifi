@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from openpyxl import Workbook
 
 from database import db
-from security import resolve_tenant, get_current_user, normalize_phone
+from security import resolve_tenant, get_current_user, require_active_subscription, normalize_phone
 from coverage_service import reverse_geocode_city
 
 router = APIRouter(prefix="/api/leads", tags=["leads"])
@@ -71,7 +71,7 @@ async def create_lead(body: LeadCreate, request: Request):
 
 
 @router.get("")
-async def list_leads(user: dict = Depends(get_current_user),
+async def list_leads(user: dict = Depends(require_active_subscription),
                      page: int = 1, limit: int = 20, search: str = None,
                      status: str = None, date_from: str = None, date_to: str = None):
     query = build_lead_query(user, search, status, date_from, date_to)
@@ -94,7 +94,7 @@ async def list_leads(user: dict = Depends(get_current_user),
 
 
 @router.post("/bulk-delete")
-async def bulk_delete_leads(body: dict, user: dict = Depends(get_current_user)):
+async def bulk_delete_leads(body: dict, user: dict = Depends(require_active_subscription)):
     ids = body.get("ids") or []
     if not isinstance(ids, list) or not ids:
         raise HTTPException(status_code=400, detail="Pilih minimal satu DataLead.")
