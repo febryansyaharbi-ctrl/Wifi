@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, timezone
 from fastapi import APIRouter, Request, Response, HTTPException, Depends
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 
 from database import db
 from security import (
@@ -14,7 +14,7 @@ router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 
 class LoginReq(BaseModel):
-    email: EmailStr
+    email: str
     password: str
 
 
