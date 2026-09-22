@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { api } from "@/lib/api";
-import { Users, MapPin, Package, CheckCircle2, XCircle, Clock, Layers } from "lucide-react";
+import { Users, MapPin, Package, CheckCircle2, XCircle, Clock, Layers, ArrowRight, Map, Palette } from "lucide-react";
 
 function Stat({ icon: Icon, label, value, tone }) {
   return (
@@ -30,6 +31,33 @@ export default function Dashboard() {
         <Stat icon={MapPin} label="File Coverage" value={d.coverage_files} tone="bg-slate-100 text-slate-600" />
         <Stat icon={Layers} label="Area Aktif" value={d.active_geometries} tone="bg-violet-100 text-violet-600" />
         <Stat icon={MapPin} label="File Aktif" value={d.active_files} tone="bg-emerald-100 text-emerald-600" />
+      </div>
+
+      <div className="mt-8">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="font-display font-semibold text-slate-900">Akses Cepat</h2>
+          <span className="text-xs text-slate-400">Kelola tenant Anda</span>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          {[
+            ["/admin/coverage", Map, "Coverage", "Kelola file dan area coverage"],
+            ["/admin/packages", Package, "Paket Internet", "Atur paket yang tampil di website"],
+            ["/admin/leads", Users, "Data Lead", "Lihat, filter, hapus, dan export lead"],
+            ["/admin/branding", Palette, "Branding", "Atur tampilan dan identitas tenant"],
+          ].map(([to, Icon, title, desc]) => (
+            <Link key={to} to={to}
+              className="group bg-white rounded-2xl border border-slate-200 p-4 shadow-sm hover:shadow-md hover:border-slate-300 transition">
+              <div className="flex items-center justify-between">
+                <span className="h-10 w-10 rounded-xl grid place-items-center bg-slate-100 text-slate-600 group-hover:bg-violet-100 group-hover:text-violet-600 transition">
+                  <Icon size={19} />
+                </span>
+                <ArrowRight size={17} className="text-slate-300 group-hover:text-slate-600 transition" />
+              </div>
+              <h3 className="mt-3 font-semibold text-slate-900">{title}</h3>
+              <p className="mt-1 text-xs leading-relaxed text-slate-500">{desc}</p>
+            </Link>
+          ))}
+        </div>
       </div>
 
       <div className="mt-8 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
