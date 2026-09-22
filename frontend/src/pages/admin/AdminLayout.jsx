@@ -19,7 +19,7 @@ const NAV = [
 
 const SUPER_NAV = [
   { to: "/admin/tenants", label: "Tenants", icon: Building2, testid: "admin-sidebar-nav-tenants" },
-  { label: "Billing", icon: CreditCard },
+  { to: "/admin/billing", label: "Billing", icon: CreditCard, testid: "admin-sidebar-nav-billing" },
   { label: "System Settings", icon: Settings },
 ];
 
