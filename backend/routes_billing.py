@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -163,7 +163,7 @@ async def update_subscription(
                 started_dt = datetime.fromisoformat(started_at.replace("Z", "+00:00"))
             except ValueError:
                 raise HTTPException(status_code=400, detail="Format started_at tidak valid")
-            expires_at = (started_dt + __import__("datetime").timedelta(days=plan["duration_days"])).isoformat()
+            expires_at = (started_dt + timedelta(days=plan["duration_days"])).isoformat()
 
     updates = {
         "plan_id": body.plan_id,
