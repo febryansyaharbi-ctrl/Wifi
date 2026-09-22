@@ -14,7 +14,7 @@ const NAV = [
   { to: "/admin/coverage", label: "Coverage", icon: Map, testid: "admin-sidebar-nav-coverage" },
   { to: "/admin/packages", label: "Paket", icon: Package, testid: "admin-sidebar-nav-packages" },
   { to: "/admin/leads", label: "Leads", icon: Users, testid: "admin-sidebar-nav-leads" },
-  { to: "/admin/branding", label: "Branding", icon: Palette, testid: "admin-sidebar-nav-branding" },
+  { to: "/admin/branding", label: "Branding & Gambar", icon: Palette, testid: "admin-sidebar-nav-branding" },
   { to: "/admin/account", label: "Akun", icon: UserCog, testid: "admin-sidebar-nav-account" },
 ];
 
