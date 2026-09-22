@@ -18,7 +18,7 @@ const NAV = [
 ];
 
 const SUPER_NAV = [
-  { label: "Tenants", icon: Building2 },
+  { to: "/admin/tenants", label: "Tenants", icon: Building2, testid: "admin-sidebar-nav-tenants" },
   { label: "Billing", icon: CreditCard },
   { label: "System Settings", icon: Settings },
 ];
@@ -49,7 +49,13 @@ export default function AdminLayout() {
         {user?.role === "SUPER_ADMIN" && (
           <div className="pt-4 mt-3 border-t border-slate-200">
             <p className="px-3 text-[11px] font-semibold uppercase tracking-wide text-slate-400 mb-1">Super Admin</p>
-            {SUPER_NAV.map((n) => (
+            {SUPER_NAV.map((n) => n.to ? (
+              <NavLink key={n.label} to={n.to} data-testid={n.testid} onClick={() => setOpen(false)}
+                className={({ isActive }) => `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition ${isActive ? "text-white" : "text-slate-600 hover:bg-slate-100"}`}
+                style={({ isActive }) => (isActive ? { background: "hsl(var(--primary))" } : {})}>
+                <n.icon size={18} /> {n.label}
+              </NavLink>
+            ) : (
               <div key={n.label} className="flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 cursor-not-allowed">
                 <span className="flex items-center gap-3"><n.icon size={18} /> {n.label}</span>
                 <span className="text-[10px] bg-slate-100 rounded px-1.5 py-0.5">Fase 2</span>
