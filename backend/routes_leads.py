@@ -82,17 +82,6 @@ async def list_leads(user: dict = Depends(get_current_user),
     return {"total": total, "page": page, "limit": limit, "leads": docs}
 
 
-@router.delete("/{lead_id}")
-async def delete_lead(lead_id: str, user: dict = Depends(get_current_user)):
-    result = await db.leads.delete_one({
-        "id": lead_id,
-        "tenant_id": user["tenant_id"],
-    })
-    if result.deleted_count == 0:
-        raise HTTPException(status_code=404, detail="Lead tidak ditemukan.")
-    return {"message": "Lead berhasil dihapus.", "id": lead_id}
-
-
 @router.get("/export")
 async def export_leads(user: dict = Depends(get_current_user),
                        search: str = None, status: str = None,
@@ -139,3 +128,14 @@ async def export_leads(user: dict = Depends(get_current_user),
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
+
+
+@router.delete("/{lead_id}")
+async def delete_lead(lead_id: str, user: dict = Depends(get_current_user)):
+    result = await db.leads.delete_one({
+        "id": lead_id,
+        "tenant_id": user["tenant_id"],
+    })
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Lead tidak ditemukan.")
+    return {"message": "Lead berhasil dihapus.", "id": lead_id}
