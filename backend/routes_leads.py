@@ -9,6 +9,7 @@ from openpyxl import Workbook
 
 from database import db
 from security import resolve_tenant, get_current_user, normalize_phone
+from coverage_service import reverse_geocode_city
 
 router = APIRouter(prefix="/api/leads", tags=["leads"])
 
@@ -79,6 +80,16 @@ async def list_leads(user: dict = Depends(get_current_user),
     total = await db.leads.count_documents(query)
     docs = await db.leads.find(query, {"_id": 0}).sort("created_at", -1) \
         .skip((page - 1) * limit).limit(limit).to_list(limit)
+    # Backfill city for older leads that already have coordinates.
+    for lead in docs:
+        if not lead.get("city") and lead.get("latitude") is not None and lead.get("longitude") is not None:
+            city = await reverse_geocode_city(lead["latitude"], lead["longitude"])
+            if city:
+                lead["city"] = city
+                await db.leads.update_one(
+                    {"id": lead["id"], "tenant_id": user["tenant_id"]},
+                    {"$set": {"city": city}},
+                )
     return {"total": total, "page": page, "limit": limit, "leads": docs}
 
 
