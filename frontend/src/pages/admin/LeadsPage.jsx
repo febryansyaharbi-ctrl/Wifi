@@ -72,16 +72,6 @@ export default function LeadsPage() {
     return params;
   };
 
-  const handleDelete = async (lead) => {
-    if (!window.confirm(`Hapus DataLead "${lead.name}"? Data yang dihapus tidak dapat dikembalikan.`)) return;
-    try {
-      await api.delete(`/leads/${lead.id}`);
-      await load();
-    } catch (error) {
-      window.alert(error?.response?.data?.detail || "DataLead gagal dihapus.");
-    }
-  };
-
   const handleExport = async () => {
     try {
       const response = await api.get("/leads/export", { params: currentParams(), responseType: "blob" });
