@@ -103,6 +103,13 @@ async def require_active_subscription(user: dict = Depends(get_current_user)):
     if user.get("role") != SUB_ADMIN:
         return user
 
+    tenant = await db.tenants.find_one(
+        {"id": user["tenant_id"]},
+        {"_id": 0, "status": 1},
+    )
+    if not tenant or tenant.get("status") != "ACTIVE":
+        raise HTTPException(status_code=402, detail="Akun nonaktif. Tenant sedang dinonaktifkan.")
+
     subscription = await db.subscriptions.find_one(
         {"tenant_id": user["tenant_id"]},
         {"_id": 0, "status": 1, "expires_at": 1},
