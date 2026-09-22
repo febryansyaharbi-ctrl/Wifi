@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Request, Depends, HTTPException
+from fastapi import APIRouter, Request, Depends, HTTPException, UploadFile, File
 from pydantic import BaseModel
 from typing import Optional
 
 from database import db
 from security import resolve_tenant, get_current_user, require_active_subscription, require_roles, SUPER_ADMIN, audit_log
 from datetime import datetime, timezone
+import base64
 
 router = APIRouter(prefix="/api", tags=["tenant"])
 
@@ -21,6 +22,7 @@ def public_tenant(t: dict) -> dict:
         "description": t.get("description"),
         "primary_color": t.get("primary_color"),
         "whatsapp_number": t.get("whatsapp_number"),
+        "hero_image_url": t.get("hero_image_url"),
     }
 
 
@@ -40,6 +42,24 @@ async def tenant_current(request: Request, subdomain: Optional[str] = None):
     if t.get("status") == "LOCKED":
         return {"status": "LOCKED", "name": t.get("name"), "message": "Halaman Non-Aktif"}
     return public_tenant(t)
+
+
+MAX_HERO_BYTES = 5 * 1024 * 1024
+
+
+@router.post("/branding/hero-image")
+async def upload_hero_image(file: UploadFile = File(...), user: dict = Depends(require_active_subscription)):
+    data = await file.read(MAX_HERO_BYTES + 1)
+    if len(data) > MAX_HERO_BYTES:
+        raise HTTPException(status_code=413, detail="Gambar hero maksimal 5MB")
+    ct = file.content_type or "image/jpeg"
+    if not ct.startswith("image/"):
+        raise HTTPException(status_code=400, detail="File harus berupa gambar")
+    data_url = f"data:{ct};base64,{base64.b64encode(data).decode('ascii')}"
+    await db.tenants.update_one({"id": user["tenant_id"]}, {"$set": {
+        "hero_image_url": data_url, "updated_at": datetime.now(timezone.utc).isoformat()}})
+    await audit_log(user["tenant_id"], user["id"], "HERO_IMAGE_UPDATE")
+    return {"hero_image_url": data_url}
 
 
 class BrandingUpdate(BaseModel):
