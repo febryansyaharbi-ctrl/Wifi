@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { useTenant } from "@/context/TenantContext";
@@ -7,6 +7,7 @@ import {
   LayoutDashboard, Map, Package, Users, Palette, UserCog,
   Building2, CreditCard, Settings, LogOut, Menu, X,
 } from "lucide-react";
+import { api } from "@/lib/api";
 
 const NAV = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, testid: "admin-sidebar-nav-dashboard", end: true },
@@ -28,6 +29,29 @@ export default function AdminLayout() {
   const { tenant } = useTenant();
   const nav = useNavigate();
   const [open, setOpen] = useState(false);
+  const [subscription, setSubscription] = useState(null);
+
+  useEffect(() => {
+    if (user?.role !== "SUB_ADMIN") {
+      setSubscription(null);
+      return;
+    }
+    let alive = true;
+    const loadSubscription = async () => {
+      try {
+        const { data } = await api.get("/billing/me");
+        if (alive) setSubscription(data);
+      } catch {
+        if (alive) setSubscription(null);
+      }
+    };
+    loadSubscription();
+    const timer = window.setInterval(loadSubscription, 60000);
+    return () => {
+      alive = false;
+      window.clearInterval(timer);
+    };
+  }, [user?.role]);
 
   const doLogout = async () => { await logout(); nav("/login", { replace: true }); };
 
@@ -40,8 +64,7 @@ export default function AdminLayout() {
         {NAV.map((n) => (
           <NavLink key={n.to} to={n.to} end={n.end} data-testid={n.testid} onClick={() => setOpen(false)}
             className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition ${
-                isActive ? "text-white" : "text-slate-600 hover:bg-slate-100"}`}
+              `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition ${isActive ? "text-white" : "text-slate-600 hover:bg-slate-100"}`}
             style={({ isActive }) => (isActive ? { background: "hsl(var(--primary))" } : {})}>
             <n.icon size={18} /> {n.label}
           </NavLink>
@@ -69,6 +92,7 @@ export default function AdminLayout() {
           <p className="text-sm font-semibold text-slate-900 truncate">{user?.name}</p>
           <p className="text-xs text-slate-400 truncate">{user?.email}</p>
           <span className="inline-block mt-1 text-[10px] font-semibold rounded px-1.5 py-0.5" style={{ background: "hsl(var(--accent))", color: "hsl(var(--accent-foreground))" }}>{user?.role}</span>
+          {user?.role === "SUB_ADMIN" && <SubscriptionStatus subscription={subscription} />}
         </div>
         <button onClick={doLogout} data-testid="admin-logout-button"
                 className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-rose-600 hover:bg-rose-50 transition">
@@ -99,4 +123,45 @@ export default function AdminLayout() {
       </div>
     </div>
   );
+}
+
+function SubscriptionStatus({ subscription }) {
+  const [remaining, setRemaining] = useState(() => getRemaining(subscription?.expires_at));
+
+  useEffect(() => {
+    setRemaining(getRemaining(subscription?.expires_at));
+    const timer = window.setInterval(() => {
+      setRemaining(getRemaining(subscription?.expires_at));
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [subscription?.expires_at]);
+
+  const active = Boolean(subscription?.is_active) && remaining > 0;
+  const label = active ? "AKUN AKTIF" : "AKUN NONAKTIF";
+  const countdown = active ? formatRemaining(remaining) : "Paket billing habis";
+
+  return (
+    <div className={`mt-2 rounded-lg px-2.5 py-2 ${active ? "bg-emerald-50" : "bg-rose-50"}`}>
+      <div className={`text-[11px] font-bold ${active ? "text-emerald-700" : "text-rose-700"}`}>{label}</div>
+      {subscription?.plan_name && <div className="text-[10px] text-slate-500 truncate">{subscription.plan_name}</div>}
+      <div className="text-[11px] font-semibold text-slate-700 tabular-nums">{countdown}</div>
+    </div>
+  );
+}
+
+function getRemaining(expiresAt) {
+  if (!expiresAt) return 0;
+  const end = new Date(expiresAt).getTime();
+  return Math.max(0, end - Date.now());
+}
+
+function formatRemaining(ms) {
+  const totalSeconds = Math.floor(ms / 1000);
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  return days > 0
+    ? `${days}h ${String(hours).padStart(2, "0")}j ${String(minutes).padStart(2, "0")}m`
+    : `${String(hours).padStart(2, "0")}j ${String(minutes).padStart(2, "0")}m ${String(seconds).padStart(2, "0")}d`;
 }
