@@ -7,11 +7,22 @@ import { Upload, Loader2, Wifi } from "lucide-react";
 const PRESETS = ["#6D28D9", "#2563EB", "#059669", "#DC2626", "#EA580C", "#0891B2", "#DB2777", "#4F46E5"];
 
 export default function BrandingPage() {
-  const { tenant, refresh } = useTenant();
+  const { tenant: contextTenant, refresh } = useTenant();
+  const [tenant, setTenant] = useState(null);
   const [form, setForm] = useState(null);
   const [saving, setSaving] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const fileRef = useRef(null);
+
+  useEffect(() => {
+    let active = true;
+    api.get("/tenant/me").then(({ data }) => {
+      if (active) setTenant(data);
+    }).catch(() => {
+      if (active) setTenant(contextTenant || null);
+    });
+    return () => { active = false; };
+  }, [contextTenant]);
 
   useEffect(() => {
     if (tenant) setForm({
