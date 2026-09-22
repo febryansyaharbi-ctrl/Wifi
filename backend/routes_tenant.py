@@ -24,6 +24,16 @@ def public_tenant(t: dict) -> dict:
     }
 
 
+@router.get("/tenant/me")
+async def tenant_me(user: dict = Depends(get_current_user)):
+    t = await db.tenants.find_one({"id": user["tenant_id"]}, {"_id": 0})
+    if not t:
+        raise HTTPException(status_code=404, detail="Tenant tidak ditemukan")
+    if t.get("status") == "LOCKED":
+        return {"status": "LOCKED", "name": t.get("name"), "message": "Halaman Non-Aktif"}
+    return public_tenant(t)
+
+
 @router.get("/tenant/current")
 async def tenant_current(request: Request, subdomain: Optional[str] = None):
     t = await resolve_tenant(request, subdomain)
