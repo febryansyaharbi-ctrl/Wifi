@@ -131,7 +131,13 @@ async def ensure_subscription(tenant_id: str):
 @router.get("/me")
 async def billing_me(user: dict = Depends(get_current_user)):
     doc = await ensure_subscription(user["tenant_id"])
-    return public_subscription(doc)
+    result = public_subscription(doc)
+    tenant = await db.tenants.find_one({"id": user["tenant_id"]}, {"_id": 0, "status": 1})
+    if result is not None:
+        result["tenant_status"] = tenant.get("status") if tenant else "LOCKED"
+        if user.get("role") == SUPER_ADMIN:
+            result["is_active"] = True
+    return result
 
 
 @router.get("/subscriptions")
