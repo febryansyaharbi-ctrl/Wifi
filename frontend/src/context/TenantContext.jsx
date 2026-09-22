@@ -29,7 +29,11 @@ export function TenantProvider({ children }) {
     }
   }, []);
 
-  // Refresh tenant config whenever the public tenant path changes.\n  // This is important when navigating from /admin to /t/{subdomain}\n  // without a full browser reload.\n  const tenantKey = currentSubdomain() || "default";\n  useEffect(() => { refresh(); }, [refresh, tenantKey]);
+  // Refresh tenant config whenever the public tenant path changes.
+  // This is important when navigating from /admin to /t/{subdomain}
+  // without a full browser reload.
+  const tenantKey = currentSubdomain() || "default";
+  useEffect(() => { refresh(); }, [refresh, tenantKey]);
 
   return (
     <TenantContext.Provider value={{ tenant, loading, refresh, setTenant }}>
