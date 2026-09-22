@@ -99,6 +99,30 @@ async def create_tenant(body: TenantCreate, user: dict = Depends(require_roles(S
     return tenant
 
 
+@router.delete("/{tenant_id}")
+async def delete_tenant(tenant_id: str, user: dict = Depends(require_roles(SUPER_ADMIN))):
+    tenant = await db.tenants.find_one({"id": tenant_id})
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Tenant tidak ditemukan")
+    if tenant.get("is_default"):
+        raise HTTPException(status_code=400, detail="Tenant default tidak dapat dihapus")
+
+    await db.audit_logs.insert_one({
+        "id": str(uuid.uuid4()), "tenant_id": user["tenant_id"], "user_id": user["id"],
+        "action": "TENANT_DELETE", "meta": {"deleted_tenant_id": tenant_id, "subdomain": tenant.get("subdomain")},
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    })
+    await db.coverage_geometries.delete_many({"tenant_id": tenant_id})
+    await db.coverage_files.delete_many({"tenant_id": tenant_id})
+    await db.leads.delete_many({"tenant_id": tenant_id})
+    await db.internet_packages.delete_many({"tenant_id": tenant_id})
+    await db.subscriptions.delete_many({"tenant_id": tenant_id})
+    await db.users.delete_many({"tenant_id": tenant_id})
+    await db.audit_logs.delete_many({"tenant_id": tenant_id})
+    await db.tenants.delete_one({"id": tenant_id})
+    return {"ok": True, "deleted_tenant_id": tenant_id}
+
+
 @router.put("/{tenant_id}")
 async def update_tenant(tenant_id: str, body: TenantUpdate,
                         user: dict = Depends(require_roles(SUPER_ADMIN))):
