@@ -69,14 +69,29 @@ async def delete_plan(plan_id: str, user: dict = Depends(require_roles(SUPER_ADM
 def public_subscription(doc: dict | None):
     if not doc:
         return None
+
+    status = doc.get("status")
+    expires_at = doc.get("expires_at")
+    now = datetime.now(timezone.utc)
+
+    if status in {"ACTIVE", "TRIAL"} and expires_at:
+        try:
+            expires_dt = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
+            if expires_dt <= now:
+                status = "EXPIRED"
+        except ValueError:
+            status = "EXPIRED"
+
+    is_active = status in {"ACTIVE", "TRIAL"} and bool(expires_at)
     return {
         "id": doc.get("id"),
         "tenant_id": doc.get("tenant_id"),
         "plan_id": doc.get("plan_id"),
         "plan_name": doc.get("plan_name"),
-        "status": doc.get("status"),
+        "status": status,
+        "is_active": is_active,
         "started_at": doc.get("started_at"),
-        "expires_at": doc.get("expires_at"),
+        "expires_at": expires_at,
         "notes": doc.get("notes"),
         "updated_at": doc.get("updated_at"),
     }
