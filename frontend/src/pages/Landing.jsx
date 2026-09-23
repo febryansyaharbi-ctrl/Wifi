@@ -7,7 +7,7 @@ import { formatIDR, waLink } from "@/lib/format";
 import { BrandLogo, PrimaryButton } from "@/components/Brand";
 import LeadForm from "@/components/LeadForm";
 import CoverageMap from "@/components/CoverageMap";
-import { MapPin, Zap, ShieldCheck, MessageCircle, Wifi, ArrowRight, Signal, Gauge, Router } from "lucide-react";
+import { MapPin, Zap, ShieldCheck, MessageCircle, Wifi, ArrowRight, Signal, Gauge, Router, Menu, X, LogIn, UserPlus } from "lucide-react";
 
 export default function Landing() {
   const { tenant, loading } = useTenant();
@@ -17,6 +17,7 @@ export default function Landing() {
   const [lead, setLead] = useState(null);
   const [showMap, setShowMap] = useState(false);
   const [covered, setCovered] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const packagesRef = useRef(null);
 
   useEffect(() => {
@@ -54,15 +55,11 @@ export default function Landing() {
       <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200/80">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <BrandLogo tenant={tenant} />
-          <button onClick={startCheck} data-testid="landing-nav-cta-coverage"
-                  className="hidden sm:inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold text-white active:scale-95 transition"
-                  style={{ background: "hsl(var(--primary))" }}>
-            <MapPin size={16} /> Cek Coverage
-          </button>
+          <div className="flex items-center gap-2">\n            <button onClick={startCheck} data-testid="landing-nav-cta-coverage" className="inline-flex items-center gap-2 rounded-full px-4 sm:px-5 py-2.5 text-sm font-semibold text-white active:scale-95 transition" style={{ background: "hsl(var(--primary))" }}><MapPin size={16} /> <span className="hidden sm:inline">Cek Coverage</span><span className="sm:hidden">Coverage</span></button>\n            <button onClick={() => setMenuOpen(true)} aria-label="Buka menu" data-testid="landing-menu-button" className="h-10 w-10 rounded-full border border-slate-200 bg-white grid place-items-center text-slate-700 hover:bg-slate-50"><Menu size={20} /></button>\n          </div>
         </div>
       </header>
 
-      {/* Hero */}
+      {menuOpen && (\n        <div className="fixed inset-0 z-[80]">\n          <div className="absolute inset-0 bg-slate-900/40" onClick={() => setMenuOpen(false)} />\n          <aside className="absolute top-0 right-0 h-full w-[min(88vw,360px)] bg-white shadow-2xl p-6 animate-fade-up">\n            <div className="flex items-center justify-between"><div className="font-display font-bold text-slate-900">Menu</div><button onClick={() => setMenuOpen(false)}><X size={22}/></button></div>\n            <div className="mt-8 space-y-3">\n              <Link to={user ? "/admin" : "/admin/login"} onClick={() => setMenuOpen(false)} className="w-full flex items-center gap-3 rounded-2xl bg-slate-50 px-4 py-3.5 font-semibold text-slate-800"><LogIn size={19}/> {user ? "Dashboard Admin" : "Login Admin"}</Link>\n              <button onClick={() => { setMenuOpen(false); startCheck(); }} className="w-full flex items-center gap-3 rounded-2xl bg-slate-50 px-4 py-3.5 font-semibold text-slate-800"><MapPin size={19}/> Cek Coverage</button>\n              <Link to="/admin/login?daftar=1" onClick={() => setMenuOpen(false)} className="w-full flex items-center gap-3 rounded-2xl px-4 py-3.5 font-semibold text-white" style={{background:"hsl(var(--primary))"}}><UserPlus size={19}/> Daftar Jadi Sub-Admin</Link>\n            </div>\n          </aside>\n        </div>\n      )}\n\n      {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-[hsl(var(--accent))] via-white to-slate-50" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 grid lg:grid-cols-2 gap-12 items-center">
