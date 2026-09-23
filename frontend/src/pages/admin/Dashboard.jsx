@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "@/lib/api";
-import { Users, MapPin, Package, CheckCircle2, XCircle, Clock, Layers, ArrowRight, Map, Palette, Megaphone } from "lucide-react";
+import { Users, MapPin, Package, CheckCircle2, XCircle, Clock, Layers, ArrowRight, Map, Palette } from "lucide-react";
 
 function Stat({ icon: Icon, label, value, tone }) {
   return (
