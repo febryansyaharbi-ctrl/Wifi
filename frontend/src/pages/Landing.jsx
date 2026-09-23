@@ -21,6 +21,23 @@ export default function Landing() {
   const packagesRef = useRef(null);
 
   useEffect(() => {
+    if (tenant?.meta_pixel_id && !window.fbq) {
+      const id = tenant.meta_pixel_id;
+      window.fbq = function(){ window.fbq.callMethod ? window.fbq.callMethod.apply(window.fbq, arguments) : window.fbq.queue.push(arguments); };
+      window._fbq = window.fbq;
+      window.fbq.push = window.fbq;
+      window.fbq.loaded = true;
+      window.fbq.version = "2.0";
+      window.fbq.queue = [];
+      const s = document.createElement("script");
+      s.async = true; s.src = "https://connect.facebook.net/en_US/fbevents.js";
+      document.head.appendChild(s);
+      window.fbq("init", id);
+      window.fbq("track", "PageView");
+    }
+  }, [tenant?.meta_pixel_id]);
+
+  useEffect(() => {
     api.get("/packages/public", { params: tenantParams() })
       .then(({ data }) => setPackages(data)).catch(() => {});
   }, []);
