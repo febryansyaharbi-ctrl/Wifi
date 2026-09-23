@@ -33,6 +33,7 @@ export default function BrandingPage() {
       description: tenant.description || "", primary_color: tenant.primary_color || "#6D28D9",
       whatsapp_number: tenant.whatsapp_number || "", logo_url: tenant.logo_url || null,
       hero_image_url: tenant.hero_image_url || null,
+      meta_pixel_id: tenant.meta_pixel_id || "",
     });
   }, [tenant]);
 
@@ -46,7 +47,7 @@ export default function BrandingPage() {
     try {
       await api.put("/branding", {
         wifi_name: form.wifi_name, website_title: form.website_title, description: form.description,
-        primary_color: form.primary_color, whatsapp_number: form.whatsapp_number,
+        primary_color: form.primary_color, whatsapp_number: form.whatsapp_number, meta_pixel_id: form.meta_pixel_id,
       });
       const { data } = await api.get("/branding");
       setTenant(data);
@@ -133,6 +134,7 @@ export default function BrandingPage() {
           <Field label="Judul Website"><input data-testid="branding-title-input" value={form.website_title} onChange={set("website_title")} className="binp" /></Field>
           <Field label="Deskripsi Singkat"><textarea value={form.description} onChange={set("description")} className="binp min-h-[80px]" /></Field>
           <Field label="Nomor WhatsApp"><input data-testid="branding-whatsapp-input" value={form.whatsapp_number} onChange={set("whatsapp_number")} className="binp" placeholder="628xxxxxxxxxx" /></Field>
+          <Field label="Meta Pixel ID"><input data-testid="branding-meta-pixel-input" value={form.meta_pixel_id} onChange={set("meta_pixel_id")} className="binp" placeholder="Contoh: 123456789012345" /><p className="text-xs text-slate-400 mt-1">Opsional. Masukkan Pixel ID Meta saja; tidak perlu koneksi akun iklan.</p></Field>
 
           <div>
             <label className="text-sm font-medium text-slate-700 mb-2 block">Warna Utama</label>
