@@ -15,13 +15,13 @@ const NAV = [
   { to: "/admin/packages", label: "Paket", icon: Package, testid: "admin-sidebar-nav-packages" },
   { to: "/admin/leads", label: "Leads", icon: Users, testid: "admin-sidebar-nav-leads" },
   { to: "/admin/branding", label: "Branding & Gambar", icon: Palette, testid: "admin-sidebar-nav-branding" },
-  { to: "/admin/account", label: "Akun", icon: UserCog, testid: "admin-sidebar-nav-account" },
+  { to: "/admin/account", label: "Akun", icon: UserCog, testid: "admin-sidebar-nav-account" },\n  { to: "/admin/ads", label: "Kampanye Iklan", icon: Settings, testid: "admin-sidebar-nav-ads" },
 ];
 
 const SUPER_NAV = [
   { to: "/admin/tenants", label: "Tenants", icon: Building2, testid: "admin-sidebar-nav-tenants" },
   { to: "/admin/billing", label: "Billing", icon: CreditCard, testid: "admin-sidebar-nav-billing" },
-  { label: "System Settings", icon: Settings },
+  { to: "/admin/system-settings", label: "System Settings", icon: Settings, testid: "admin-sidebar-nav-system-settings" },
 ];
 
 export default function AdminLayout() {
@@ -81,7 +81,7 @@ export default function AdminLayout() {
             ) : (
               <div key={n.label} className="flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 cursor-not-allowed">
                 <span className="flex items-center gap-3"><n.icon size={18} /> {n.label}</span>
-                <span className="text-[10px] bg-slate-100 rounded px-1.5 py-0.5">Fase 2</span>
+                <span className="text-[10px] bg-slate-100 rounded px-1.5 py-0.5">Segera</span>
               </div>
             ))}
           </div>
