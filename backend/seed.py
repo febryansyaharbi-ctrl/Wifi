@@ -58,6 +58,7 @@ async def seed_core():
         await db.users.insert_one({
             "id": str(uuid.uuid4()),
             "email": admin_email,
+            "username": "superadmin",
             "password_hash": hash_password(admin_password),
             "name": "Super Admin",
             "role": SUPER_ADMIN,
@@ -67,7 +68,7 @@ async def seed_core():
         logger.info("Seeded super admin %s", admin_email)
     elif not verify_password(admin_password, existing.get("password_hash", "")):
         await db.users.update_one({"email": admin_email},
-                                  {"$set": {"password_hash": hash_password(admin_password)}})
+                                  {"$set": {"password_hash": hash_password(admin_password), "username": existing.get("username") or "superadmin"}})
 
     if await db.internet_packages.count_documents({"tenant_id": DEFAULT_TENANT_ID}) == 0:
         for p in DEMO_PACKAGES:
@@ -120,5 +121,10 @@ async def seed_gis():
 
 
 async def run_seed():
+    await db.system_settings.update_one(
+        {"key": "login_promo"},
+        {"$setOnInsert": {"key": "login_promo", "value": "Jadilah Sub-Admin WiFi dan kembangkan layanan internet Anda. Nikmati dashboard mandiri, landing page berbranding sendiri, data leads terisolasi, coverage GIS, dan paket billing mulai dari harga terjangkau."}},
+        upsert=True,
+    )
     await seed_core()
     asyncio.create_task(seed_gis())
