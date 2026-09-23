@@ -123,7 +123,7 @@ async def seed_gis():
 async def run_seed():
     await db.system_settings.update_one(
         {"key": "login_promo"},
-        {"$setOnInsert": {"key": "login_promo", "value": "Jadilah Sub-Admin WiFi dan kembangkan layanan internet Anda. Nikmati dashboard mandiri, landing page berbranding sendiri, data leads terisolasi, coverage GIS, dan paket billing mulai dari harga terjangkau."}},
+        {"$setOnInsert": {"key": "login_promo", "value": "Jadilah Sub-Admin WiFi dan kembangkan layanan internet Anda. Dapatkan dashboard mandiri, branding WiFi sendiri, coverage GIS, leads terisolasi, dan billing mulai dari {PRICE_START}/bulan."}},
         upsert=True,
     )
     await seed_core()
