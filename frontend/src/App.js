@@ -16,7 +16,6 @@ import BrandingPage from "@/pages/admin/BrandingPage";
 import AccountPage from "@/pages/admin/AccountPage";
 import TenantsPage from "@/pages/admin/TenantsPage";
 import BillingPlansPage from "@/pages/admin/BillingPlansPage";
-import AdsPage from "@/pages/admin/AdsPage";
 import SystemSettingsPage from "@/pages/admin/SystemSettingsPage";
 
 function Protected({ children }) {
@@ -122,7 +121,6 @@ function App() {
                 <Route path="account" element={<AccountPage />} />
                 <Route path="tenants" element={<TenantsPage />} />
                 <Route path="billing" element={<BillingPlansPage />} />
-                <Route path="ads" element={<AdsPage />} />
                 <Route path="system-settings" element={<SystemSettingsPage />} />
               </Route>
               <Route path="*" element={<Navigate to="/" replace />} />
