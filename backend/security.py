@@ -30,12 +30,13 @@ def _secret() -> str:
     return os.environ["JWT_SECRET"]
 
 
-def create_access_token(user_id: str, email: str, role: str, tenant_id: str) -> str:
+def create_access_token(user_id: str, email: str, role: str, tenant_id: str, session_version: int = 0) -> str:
     payload = {
         "sub": user_id,
         "email": email,
         "role": role,
         "tenant_id": tenant_id,
+        "session_version": session_version,
         "type": "access",
         "exp": datetime.now(timezone.utc) + timedelta(minutes=ACCESS_MINUTES),
     }
@@ -86,6 +87,9 @@ async def get_current_user(request: Request) -> dict:
         raise HTTPException(status_code=401, detail="Token tidak valid")
     user = await db.users.find_one({"id": payload["sub"]}, {"_id": 0, "password_hash": 0})
     if not user:
+        raise HTTPException(status_code=401, detail="Pengguna tidak ditemukan")
+    if int(payload.get("session_version", 0)) != int(user.get("session_version", 0)):
+        raise HTTPException(status_code=401, detail="Sesi sudah berakhir. Silakan login kembali.")
         raise HTTPException(status_code=401, detail="Pengguna tidak ditemukan")
     return user
 
