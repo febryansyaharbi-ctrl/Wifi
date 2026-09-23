@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
-import { Building2, Plus, Power, X, CreditCard, Trash2, RefreshCw } from "lucide-react";
+import { Building2, Plus, Power, X, CreditCard, Trash2, RefreshCw, History } from "lucide-react";
 
 const emptyForm = {
   name: "", subdomain: "", admin_name: "", admin_email: "",
@@ -23,6 +23,7 @@ export default function TenantsPage() {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [billingBusy, setBillingBusy] = useState(false);
+  const [history, setHistory] = useState(null);
   const [message, setMessage] = useState("");
 
   const load = async () => {
@@ -85,6 +86,16 @@ export default function TenantsPage() {
         started_at: current.started_at || "", expires_at: current.expires_at || "", notes: current.notes || "",
       } : { ...emptyBilling },
     });
+  };
+
+  const openHistory = async (tenant) => {
+    setBillingBusy(true);
+    try {
+      const { data } = await api.get("/billing/subscriptions/" + tenant.id + "/history");
+      setHistory({ tenant, items: data || [] });
+    } catch (e) {
+      setMessage(e?.response?.data?.detail || "Gagal memuat riwayat subscription");
+    } finally { setBillingBusy(false); }
   };
 
   const renewSubscription = async (tenant) => {
@@ -178,6 +189,9 @@ export default function TenantsPage() {
                       <RefreshCw size={16} /> Perpanjang
                     </button>
                   )}
+                  <button onClick={() => openHistory(t)} disabled={billingBusy} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-50">
+                    <History size={16} /> Riwayat
+                  </button>
                   {!t.is_default && (
                     <>
                       <button onClick={() => toggle(t)} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50">
@@ -220,6 +234,14 @@ export default function TenantsPage() {
         </div>
       )}
 
+      {history && (
+        <HistoryModal
+          tenant={history.tenant}
+          items={history.items}
+          close={() => setHistory(null)}
+        />
+      )}
+
       {billing && (
         <BillingModal
           tenant={billing.tenant}
@@ -233,6 +255,57 @@ export default function TenantsPage() {
       )}
     </div>
   );
+}
+
+function HistoryModal({ tenant, items, close }) {
+  return (
+    <div className="fixed inset-0 z-[70] bg-slate-900/60 p-4 grid place-items-center">
+      <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white rounded-3xl shadow-2xl p-6">
+        <div className="flex items-center justify-between mb-5">
+          <div>
+            <h2 className="font-display text-xl font-bold text-slate-900">Riwayat Subscription</h2>
+            <p className="text-sm text-slate-500 mt-1">{tenant.name} · {tenant.subdomain}</p>
+          </div>
+          <button type="button" onClick={close}><X size={22} /></button>
+        </div>
+        {items.length ? (
+          <div className="space-y-3">
+            {items.map((item) => (
+              <div key={item.id} className="rounded-2xl border border-slate-200 p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-sm font-semibold text-slate-900">{item.action === "RENEW" ? "Perpanjangan" : "Perubahan Subscription"}</span>
+                  <span className="text-xs text-slate-400">{formatDateTime(item.created_at)}</span>
+                </div>
+                <div className="mt-3 grid sm:grid-cols-2 gap-3 text-xs">
+                  <HistoryState label="Sebelum" value={item.before} />
+                  <HistoryState label="Sesudah" value={item.after} />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : <p className="py-8 text-center text-sm text-slate-400">Belum ada riwayat subscription.</p>}
+        <button type="button" onClick={close} className="mt-5 rounded-xl px-4 py-2.5 text-sm font-medium bg-slate-100 text-slate-700">Tutup</button>
+      </div>
+    </div>
+  );
+}
+
+function HistoryState({ label, value }) {
+  if (!value) return <div className="rounded-xl bg-slate-50 p-3"><b>{label}</b><div className="mt-1 text-slate-400">Belum ada</div></div>;
+  return (
+    <div className="rounded-xl bg-slate-50 p-3">
+      <b>{label}</b>
+      <div className="mt-1 text-slate-600">{value.plan_name || "Tanpa paket"} · {STATUS_LABELS[value.status] || value.status}</div>
+      <div className="mt-1 text-slate-400">Berakhir: {formatDate(value.expires_at) || "-"}</div>
+    </div>
+  );
+}
+
+function formatDateTime(value) {
+  if (!value) return "-";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return value;
+  return d.toLocaleString("id-ID", { dateStyle: "medium", timeStyle: "short" });
 }
 
 function BillingModal({ tenant, form, plans, busy, close, save, setForm }) {
