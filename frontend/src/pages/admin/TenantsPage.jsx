@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
-import { Building2, Plus, Power, X, CreditCard, Trash2 } from "lucide-react";
+import { Building2, Plus, Power, X, CreditCard, Trash2, RefreshCw } from "lucide-react";
 
 const emptyForm = {
   name: "", subdomain: "", admin_name: "", admin_email: "",
@@ -87,6 +87,23 @@ export default function TenantsPage() {
     });
   };
 
+  const renewSubscription = async (tenant) => {
+    const current = subscriptions.find((s) => s.tenant_id === tenant.id);
+    if (!current?.plan_id) {
+      setMessage("Tenant belum memiliki paket subscription.");
+      return;
+    }
+    if (!window.confirm(`Perpanjang subscription "${tenant.name}" sesuai durasi paket saat ini?`)) return;
+    setBillingBusy(true);
+    try {
+      await api.post("/billing/subscriptions/" + tenant.id + "/renew");
+      setMessage("Subscription tenant berhasil diperpanjang.");
+      await load();
+    } catch (e) {
+      setMessage(e?.response?.data?.detail || "Gagal memperpanjang subscription");
+    } finally { setBillingBusy(false); }
+  };
+
   const saveBilling = async (e) => {
     e.preventDefault();
     if (!billing) return;
@@ -156,6 +173,11 @@ export default function TenantsPage() {
                   <button onClick={() => openBilling(t)} className="inline-flex items-center gap-2 rounded-xl border border-violet-200 bg-violet-50 text-violet-700 px-3 py-2 text-sm font-medium hover:bg-violet-100">
                     <CreditCard size={16} /> Subscription
                   </button>
+                  {sub?.plan_id && (
+                    <button onClick={() => renewSubscription(t)} disabled={billingBusy} className="inline-flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 px-3 py-2 text-sm font-medium hover:bg-emerald-100 disabled:opacity-50">
+                      <RefreshCw size={16} /> Perpanjang
+                    </button>
+                  )}
                   {!t.is_default && (
                     <>
                       <button onClick={() => toggle(t)} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50">
