@@ -8,7 +8,7 @@ from security import require_roles, SUPER_ADMIN
 
 router = APIRouter(prefix="/api/system", tags=["system"])
 
-DEFAULT_LOGIN_PROMO = "Jadilah Sub-Admin WiFi dan kembangkan layanan internet Anda. Nikmati dashboard mandiri, landing page berbranding sendiri, data leads terisolasi, coverage GIS, dan paket billing mulai dari harga terjangkau."
+DEFAULT_LOGIN_PROMO = "Jadilah Sub-Admin WiFi dan kembangkan layanan internet Anda. Dapatkan dashboard mandiri, branding WiFi sendiri, coverage GIS, leads terisolasi, dan billing mulai dari {PRICE_START}/bulan."
 
 
 class LoginPromoBody(BaseModel):
@@ -18,7 +18,10 @@ class LoginPromoBody(BaseModel):
 @router.get("/login-promo")
 async def get_login_promo():
     doc = await db.system_settings.find_one({"key": "login_promo"}, {"_id": 0})
-    return {"text": (doc or {}).get("value") or DEFAULT_LOGIN_PROMO}
+    text = (doc or {}).get("value") or DEFAULT_LOGIN_PROMO
+    plan = await db.subscription_plans.find_one({"active": True}, {"_id": 0, "price": 1}, sort=[("price", 1)])
+    price = f"Rp {int(plan.get("price", 0)):,}".replace(",", ".") if plan else "harga paket aktif"
+    return {"text": text.replace("{PRICE_START}", price), "price_start": price}
 
 
 @router.put("/login-promo")
