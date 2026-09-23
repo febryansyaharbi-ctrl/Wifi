@@ -110,6 +110,31 @@ class SubscriptionUpdate(BaseModel):
     notes: Optional[str] = Field(default=None, max_length=1000)
 
 
+async def record_subscription_history(tenant_id: str, action: str, before: dict | None, after: dict | None, user: dict):
+    now = datetime.now(timezone.utc).isoformat()
+    await db.subscription_history.insert_one({
+        "id": str(uuid.uuid4()),
+        "tenant_id": tenant_id,
+        "action": action,
+        "before": {
+            "plan_id": before.get("plan_id"),
+            "plan_name": before.get("plan_name"),
+            "status": before.get("status"),
+            "started_at": before.get("started_at"),
+            "expires_at": before.get("expires_at"),
+        } if before else None,
+        "after": {
+            "plan_id": after.get("plan_id"),
+            "plan_name": after.get("plan_name"),
+            "status": after.get("status"),
+            "started_at": after.get("started_at"),
+            "expires_at": after.get("expires_at"),
+        } if after else None,
+        "changed_by": user.get("id"),
+        "created_at": now,
+    })
+
+
 async def ensure_subscription(tenant_id: str):
     existing = await db.subscriptions.find_one({"tenant_id": tenant_id})
     if existing:
@@ -148,6 +173,20 @@ async def billing_me(user: dict = Depends(get_current_user)):
 async def list_subscriptions(user: dict = Depends(require_roles(SUPER_ADMIN))):
     docs = await db.subscriptions.find({}, {"_id": 0}).sort("updated_at", -1).to_list(1000)
     return [public_subscription(doc) for doc in docs]
+
+
+@router.get("/subscriptions/{tenant_id}/history")
+async def subscription_history(
+    tenant_id: str,
+    user: dict = Depends(require_roles(SUPER_ADMIN)),
+):
+    tenant = await db.tenants.find_one({"id": tenant_id}, {"_id": 0, "id": 1})
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Tenant tidak ditemukan")
+    return await db.subscription_history.find(
+        {"tenant_id": tenant_id},
+        {"_id": 0},
+    ).sort("created_at", -1).to_list(100)
 
 
 @router.post("/subscriptions/{tenant_id}/renew")
@@ -199,6 +238,7 @@ async def renew_subscription(
         {"tenant_id": tenant_id, "plan_id": plan["id"], "expires_at": expires_at},
     )
     doc = await db.subscriptions.find_one({"tenant_id": tenant_id}, {"_id": 0})
+    await record_subscription_history(tenant_id, "RENEW", existing, doc, user)
     return public_subscription(doc)
 
 
@@ -270,4 +310,5 @@ async def update_subscription(
     )
 
     doc = await db.subscriptions.find_one({"tenant_id": tenant_id}, {"_id": 0})
+    await record_subscription_history(tenant_id, "UPDATE", existing, doc, user)
     return public_subscription(doc)
