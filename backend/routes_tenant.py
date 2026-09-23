@@ -23,6 +23,7 @@ def public_tenant(t: dict) -> dict:
         "primary_color": t.get("primary_color"),
         "whatsapp_number": t.get("whatsapp_number"),
         "hero_image_url": t.get("hero_image_url"),
+        "meta_pixel_id": t.get("meta_pixel_id"),
     }
 
 
@@ -69,6 +70,7 @@ class BrandingUpdate(BaseModel):
     primary_color: Optional[str] = None
     whatsapp_number: Optional[str] = None
     logo_url: Optional[str] = None
+    meta_pixel_id: Optional[str] = None
 
 
 @router.get("/branding")
@@ -82,6 +84,11 @@ async def get_branding(user: dict = Depends(require_active_subscription)):
 @router.put("/branding")
 async def update_branding(body: BrandingUpdate, user: dict = Depends(require_active_subscription)):
     updates = {k: v for k, v in body.model_dump().items() if v is not None}
+    if "meta_pixel_id" in updates:
+        value = str(updates["meta_pixel_id"]).strip()
+        if value and (len(value) > 40 or not value.isalnum()):
+            raise HTTPException(status_code=400, detail="Meta Pixel ID tidak valid")
+        updates["meta_pixel_id"] = value or None
     if not updates:
         raise HTTPException(status_code=400, detail="Tidak ada perubahan")
     updates["updated_at"] = datetime.now(timezone.utc).isoformat()
