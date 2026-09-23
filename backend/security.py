@@ -124,6 +124,9 @@ async def require_active_subscription(user: dict = Depends(get_current_user)):
     if active:
         try:
             expires_dt = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
+            # Data lama tanpa timezone diperlakukan sebagai UTC.
+            if expires_dt.tzinfo is None:
+                expires_dt = expires_dt.replace(tzinfo=timezone.utc)
             active = expires_dt > datetime.now(timezone.utc)
         except (TypeError, ValueError):
             active = False
