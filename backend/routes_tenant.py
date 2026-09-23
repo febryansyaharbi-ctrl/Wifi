@@ -86,7 +86,7 @@ async def update_branding(body: BrandingUpdate, user: dict = Depends(require_act
     updates = {k: v for k, v in body.model_dump().items() if v is not None}
     if "meta_pixel_id" in updates:
         value = str(updates["meta_pixel_id"]).strip()
-        if value and (len(value) > 40 or not value.isalnum()):
+        if value and (len(value) > 40 or not value.isdigit()):
             raise HTTPException(status_code=400, detail="Meta Pixel ID tidak valid")
         updates["meta_pixel_id"] = value or None
     if not updates:
