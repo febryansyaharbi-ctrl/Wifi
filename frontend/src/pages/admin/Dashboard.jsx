@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "@/lib/api";
-import { Users, MapPin, Package, CheckCircle2, XCircle, Clock, Layers, ArrowRight, Map, Palette } from "lucide-react";
+import { Users, MapPin, Package, CheckCircle2, XCircle, Clock, Layers, ArrowRight, Map, Palette, Megaphone } from "lucide-react";
 
 function Stat({ icon: Icon, label, value, tone }) {
   return (
@@ -63,7 +63,7 @@ export default function Dashboard() {
             ["/admin/coverage", Map, "Coverage", "Kelola file dan area coverage"],
             ["/admin/packages", Package, "Paket Internet", "Atur paket yang tampil di website"],
             ["/admin/leads", Users, "Data Lead", "Lihat, filter, hapus, dan export lead"],
-            ["/admin/branding", Palette, "Edit Gambar Hero", "Ganti gambar besar dan atur tampilan tenant"],
+            ["/admin/branding", Palette, "Edit Gambar Hero", "Ganti gambar besar dan atur tampilan tenant"],\n            ["/admin/ads", Megaphone, "Kampanye Iklan", "Hubungkan Meta Ads & TikTok Ads secara terisolasi per tenant"],
           ].map(([to, Icon, title, desc]) => (
             <Link key={to} to={to}
               className="group bg-white rounded-2xl border border-slate-200 p-4 shadow-sm hover:shadow-md hover:border-slate-300 transition">
