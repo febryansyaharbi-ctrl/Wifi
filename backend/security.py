@@ -90,7 +90,6 @@ async def get_current_user(request: Request) -> dict:
         raise HTTPException(status_code=401, detail="Pengguna tidak ditemukan")
     if int(payload.get("session_version", 0)) != int(user.get("session_version", 0)):
         raise HTTPException(status_code=401, detail="Sesi sudah berakhir. Silakan login kembali.")
-        raise HTTPException(status_code=401, detail="Pengguna tidak ditemukan")
     return user
 
 
