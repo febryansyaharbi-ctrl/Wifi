@@ -150,6 +150,58 @@ async def list_subscriptions(user: dict = Depends(require_roles(SUPER_ADMIN))):
     return [public_subscription(doc) for doc in docs]
 
 
+@router.post("/subscriptions/{tenant_id}/renew")
+async def renew_subscription(
+    tenant_id: str,
+    user: dict = Depends(require_roles(SUPER_ADMIN)),
+):
+    tenant = await db.tenants.find_one({"id": tenant_id}, {"_id": 0})
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Tenant tidak ditemukan")
+
+    existing = await db.subscriptions.find_one({"tenant_id": tenant_id})
+    if not existing or not existing.get("plan_id"):
+        raise HTTPException(status_code=400, detail="Tenant belum memiliki paket subscription")
+
+    plan = await db.subscription_plans.find_one({"id": existing["plan_id"]}, {"_id": 0})
+    if not plan or not plan.get("active"):
+        raise HTTPException(status_code=400, detail="Paket subscription sudah tidak aktif")
+
+    now_dt = datetime.now(timezone.utc)
+    start_dt = now_dt
+    current_expiry = existing.get("expires_at")
+    if current_expiry:
+        try:
+            expiry_dt = datetime.fromisoformat(current_expiry.replace("Z", "+00:00"))
+            if expiry_dt.tzinfo is None:
+                expiry_dt = expiry_dt.replace(tzinfo=timezone.utc)
+            if expiry_dt > now_dt:
+                start_dt = expiry_dt
+        except (TypeError, ValueError):
+            start_dt = now_dt
+
+    started_at = start_dt.isoformat()
+    expires_at = (start_dt + timedelta(days=plan["duration_days"])).isoformat()
+    now = now_dt.isoformat()
+    updates = {
+        "plan_id": plan["id"],
+        "plan_name": plan["name"],
+        "status": "ACTIVE",
+        "started_at": started_at,
+        "expires_at": expires_at,
+        "updated_at": now,
+    }
+    await db.subscriptions.update_one({"tenant_id": tenant_id}, {"$set": updates})
+    await audit_log(
+        user["tenant_id"],
+        user["id"],
+        "SUBSCRIPTION_RENEW",
+        {"tenant_id": tenant_id, "plan_id": plan["id"], "expires_at": expires_at},
+    )
+    doc = await db.subscriptions.find_one({"tenant_id": tenant_id}, {"_id": 0})
+    return public_subscription(doc)
+
+
 @router.put("/subscriptions/{tenant_id}")
 async def update_subscription(
     tenant_id: str,
