@@ -14,22 +14,25 @@ router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 
 class LoginReq(BaseModel):
-    email: str
+    identifier: str
     password: str
 
 
 @router.post("/login")
 async def login(req: LoginReq, request: Request, response: Response):
-    email = req.email.lower().strip()
+    identifier_value = req.identifier.strip()
+    email = identifier_value.lower()
     ip = request.client.host if request.client else "unknown"
     identifier = f"{ip}:{email}"
     await check_lockout(identifier)
-    user = await db.users.find_one({"email": email})
+    user = await db.users.find_one({
+        "$or": [{"email": email}, {"username": identifier_value.lower()}]
+    })
     if not user or not verify_password(req.password, user.get("password_hash", "")):
         await register_failed(identifier)
-        raise HTTPException(status_code=401, detail="Email atau password salah")
+        raise HTTPException(status_code=401, detail="Username/email atau password salah")
     await clear_attempts(identifier)
-    access = create_access_token(user["id"], user["email"], user["role"], user["tenant_id"])
+    access = create_access_token(user["id"], user.get("email", ""), user["role"], user["tenant_id"])
     refresh = create_refresh_token(user["id"])
     set_auth_cookies(response, access, refresh)
     await audit_log(user["tenant_id"], user["id"], "LOGIN")
