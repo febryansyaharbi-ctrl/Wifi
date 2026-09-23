@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { useTenant } from "@/context/TenantContext";
 import { BrandLogo } from "@/components/Brand";
-import { formatApiError } from "@/lib/api";
+import { api, formatApiError } from "@/lib/api";
 import { Lock, UserRound, Loader2, Eye, EyeOff, UserPlus } from "lucide-react";
 
 export default function Login() {
