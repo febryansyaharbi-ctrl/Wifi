@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api";
 import { applyPrimaryColor } from "@/context/TenantContext";
 import { toast } from "sonner";
-import { Upload, Loader2, Wifi } from "lucide-react";
+import { Upload, Loader2, Wifi, Trash2 } from "lucide-react";
 
 const PRESETS = ["#6D28D9", "#2563EB", "#059669", "#DC2626", "#EA580C", "#0891B2", "#DB2777", "#4F46E5"];
 
@@ -56,6 +56,19 @@ export default function BrandingPage() {
     finally { setSaving(false); }
   };
 
+  const deleteLogo = async () => {
+    if (!form.logo_url || !window.confirm("Hapus logo tenant ini?")) return;
+    setUploadingLogo(true);
+    try {
+      await api.delete("/branding/logo");
+      setForm((f) => ({ ...f, logo_url: null }));
+      const brandingResponse = await api.get("/branding");
+      setTenant(brandingResponse.data);
+      toast.success("Logo dihapus.");
+    } catch (err) { toast.error(err.response?.data?.detail || "Gagal menghapus logo."); }
+    finally { setUploadingLogo(false); }
+  };
+
   const uploadLogo = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -105,7 +118,10 @@ export default function BrandingPage() {
                       style={{ background: "hsl(var(--primary))" }}>
                 {uploadingLogo ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />} Unggah Logo
               </button>
-              <p className="text-xs text-slate-400 mt-1.5">PNG/JPG, maksimal 2MB.</p>
+              <div className="flex items-center gap-2 mt-1.5">
+                <p className="text-xs text-slate-400">PNG/JPG, maksimal 2MB.</p>
+                {form.logo_url && <button type="button" onClick={deleteLogo} disabled={uploadingLogo} className="inline-flex items-center gap-1 text-xs font-medium text-rose-600 hover:text-rose-700 disabled:opacity-50"><Trash2 size={13}/> Hapus</button>}
+              </div>
             </div>
             <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={uploadLogo} />
           </div>
