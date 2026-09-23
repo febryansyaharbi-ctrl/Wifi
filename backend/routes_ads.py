@@ -338,9 +338,25 @@ async def insights(platform: str, user: dict = Depends(require_active_subscripti
             },
         )
         return {"platform": platform, "period": "30 hari terakhir", "data": result.get("data", [])}
+    today = _now().date()
+    start = today - timedelta(days=29)
+    result = _http_json(
+        f"{TIKTOK_BASE}/report/integrated/get/",
+        params={
+            "report_type": "BASIC",
+            "advertiser_id": account_id,
+            "data_level": "AUCTION_CAMPAIGN",
+            "dimensions": json.dumps(["campaign_id"]),
+            "metrics": json.dumps(["spend", "impressions", "clicks", "ctr", "cpc", "cpm"]),
+            "start_date": start.isoformat(),
+            "end_date": today.isoformat(),
+            "page": 1,
+            "page_size": 100,
+        },
+        headers={"Access-Token": token},
+    )
     return {
         "platform": platform,
         "period": "30 hari terakhir",
-        "data": [],
-        "note": "Pelaporan TikTok dapat ditambahkan memakai Reporting API setelah akun terhubung.",
+        "data": result.get("data", {}).get("list", []),
     }
