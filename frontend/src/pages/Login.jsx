@@ -4,7 +4,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useTenant } from "@/context/TenantContext";
 import { BrandLogo } from "@/components/Brand";
 import { api, formatApiError } from "@/lib/api";
-import { Lock, UserRound, Loader2, Eye, EyeOff, UserPlus } from "lucide-react";
+import { Lock, UserRound, Loader2, Eye, EyeOff } from "lucide-react";
 
 export default function Login() {
   const { login, user } = useAuth();
@@ -57,7 +57,8 @@ export default function Login() {
           <div className="relative mb-6">
             <Lock size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
             <input data-testid="login-password-input" type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)}
-                   className="w-full h-12 pl-11 pr-11 rounded-xl border border-slate-200 focus:border-[hsl(var(--primary))] focus:ring-2 focus:ring-[hsl(var(--primary))]/20 outline-none" placeholder="••••••••" />\n            <button type="button" onClick={() => setShowPassword(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">{showPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button>
+                   className="w-full h-12 pl-11 pr-11 rounded-xl border border-slate-200 focus:border-[hsl(var(--primary))] focus:ring-2 focus:ring-[hsl(var(--primary))]/20 outline-none" placeholder="••••••••" />
+            <button type="button" onClick={() => setShowPassword(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">{showPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button>
           </div>
           <div className="flex justify-between items-center mb-3"><span className="text-xs text-slate-400">Akses aman untuk admin & Sub-Admin</span><button type="button" className="text-xs font-semibold text-violet-600">Lupa Password?</button></div>\n          <button type="submit" disabled={loading} data-testid="login-submit-button"
                   className="w-full h-12 rounded-xl text-white font-semibold flex items-center justify-center gap-2 active:scale-[0.98] transition disabled:opacity-60"
