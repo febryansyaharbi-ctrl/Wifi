@@ -8,6 +8,7 @@ db = client[os.environ["DB_NAME"]]
 
 async def create_indexes():
     await db.users.create_index("email", unique=True)
+    await db.users.create_index("username", unique=True, sparse=True)
     await db.users.create_index("tenant_id")
     await db.tenants.create_index("subdomain", unique=True)
     await db.tenants.create_index("is_default")
@@ -27,3 +28,6 @@ async def create_indexes():
     await db.login_attempts.create_index("identifier")
     await db.audit_logs.create_index("tenant_id")
     await db.audit_logs.create_index("created_at")
+    await db.ad_connections.create_index([("tenant_id", 1), ("platform", 1)], unique=True)
+    await db.ad_oauth_states.create_index("state", unique=True)
+    await db.ad_oauth_states.create_index("expires_at", expireAfterSeconds=0)
