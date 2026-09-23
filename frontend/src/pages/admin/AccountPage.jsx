@@ -46,6 +46,19 @@ export default function AccountPage() {
     }
   };
 
+  const changePassword = async (e) => {
+    e.preventDefault();
+    if (newPassword.length < 8) { toast.error("Password baru minimal 8 karakter."); return; }
+    setBusy(true);
+    try {
+      await api.post("/auth/change-password", { current_password: currentPassword, new_password: newPassword });
+      toast.success("Password berhasil diubah. Silakan login kembali.");
+      await logout();
+      window.location.replace("/admin/login");
+    } catch (err) { toast.error(formatApiError(err?.response?.data?.detail)); }
+    finally { setBusy(false); }
+  };
+
   return (
     <div className="max-w-2xl">
       <h1 className="font-display text-2xl sm:text-3xl font-bold text-slate-900">Akun</h1>
