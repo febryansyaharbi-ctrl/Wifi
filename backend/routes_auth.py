@@ -18,6 +18,11 @@ class LoginReq(BaseModel):
     password: str
 
 
+class ChangePasswordReq(BaseModel):
+    current_password: str
+    new_password: str
+
+
 @router.post("/login")
 async def login(req: LoginReq, request: Request, response: Response):
     identifier_value = req.identifier.strip()
@@ -40,6 +45,21 @@ async def login(req: LoginReq, request: Request, response: Response):
         "id": user["id"], "email": user["email"], "name": user.get("name"),
         "role": user["role"], "tenant_id": user["tenant_id"],
     }
+
+
+@router.post("/change-password")
+async def change_password(req: ChangePasswordReq, response: Response, user: dict = Depends(get_current_user)):
+    if len(req.new_password) < 8:
+        raise HTTPException(status_code=400, detail="Password baru minimal 8 karakter")
+    stored = await db.users.find_one({"id": user["id"]}, {"_id": 0, "password_hash": 1})
+    if not stored or not verify_password(req.current_password, stored.get("password_hash", "")):
+        raise HTTPException(status_code=400, detail="Password saat ini salah")
+    if req.current_password == req.new_password:
+        raise HTTPException(status_code=400, detail="Password baru harus berbeda dari password saat ini")
+    await db.users.update_one({"id": user["id"]}, {"$set": {"password_hash": hash_password(req.new_password), "updated_at": datetime.now(timezone.utc).isoformat()}, "$inc": {"session_version": 1}})
+    clear_auth_cookies(response)
+    await audit_log(user["tenant_id"], user["id"], "PASSWORD_CHANGE")
+    return {"ok": True, "message": "Password berhasil diubah. Silakan login kembali."}
 
 
 @router.post("/logout")
