@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useTenant } from "@/context/TenantContext";
 import { api } from "@/lib/api";
 import { Users, MapPin, Package, CheckCircle2, XCircle, Clock, Layers, ArrowRight, Map, Palette } from "lucide-react";
 
@@ -14,6 +15,7 @@ function Stat({ icon: Icon, label, value, tone }) {
 }
 
 export default function Dashboard() {
+  const { tenant } = useTenant();
   const [d, setD] = useState(null);
   const [subscription, setSubscription] = useState(null);
   useEffect(() => {
@@ -25,7 +27,7 @@ export default function Dashboard() {
   return (
     <div data-testid="admin-dashboard">
       <h1 className="font-display text-2xl sm:text-3xl font-bold text-slate-900">Dashboard</h1>
-      <p className="text-slate-500 mt-1">Ringkasan aktivitas tenant Anda.</p>
+      <p className="text-slate-500 mt-1">{tenant?.wifi_name ? `Ringkasan aktivitas ${tenant.wifi_name}.` : "Ringkasan aktivitas tenant Anda."}</p>
       {subscription && (
         <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
