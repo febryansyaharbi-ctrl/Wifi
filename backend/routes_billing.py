@@ -77,9 +77,13 @@ def public_subscription(doc: dict | None):
     if status in {"ACTIVE", "TRIAL"} and expires_at:
         try:
             expires_dt = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
+            # Data lama bisa tersimpan tanpa timezone; anggap UTC agar tidak
+            # terjadi perbandingan naive vs aware yang membuat /billing/me 500.
+            if expires_dt.tzinfo is None:
+                expires_dt = expires_dt.replace(tzinfo=timezone.utc)
             if expires_dt <= now:
                 status = "EXPIRED"
-        except ValueError:
+        except (TypeError, ValueError):
             status = "EXPIRED"
 
     is_active = status in {"ACTIVE", "TRIAL"} and bool(expires_at)
