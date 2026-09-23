@@ -24,30 +24,6 @@ export default function AccountPage() {
 
   const changePassword = async (e) => {
     e.preventDefault();
-    if (newPassword.length < 8) {
-      toast.error("Password baru minimal 8 karakter.");
-      return;
-    }
-    setBusy(true);
-    try {
-      await api.post("/auth/change-password", {
-        current_password: currentPassword,
-        new_password: newPassword,
-      });
-      toast.success("Password berhasil diubah. Silakan login kembali.");
-      setCurrentPassword("");
-      setNewPassword("");
-      await logout();
-      window.location.replace("/admin/login");
-    } catch (err) {
-      toast.error(formatApiError(err?.response?.data?.detail));
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const changePassword = async (e) => {
-    e.preventDefault();
     if (newPassword.length < 8) { toast.error("Password baru minimal 8 karakter."); return; }
     setBusy(true);
     try {
