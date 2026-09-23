@@ -32,7 +32,7 @@ async def login(req: LoginReq, request: Request, response: Response):
         await register_failed(identifier)
         raise HTTPException(status_code=401, detail="Username/email atau password salah")
     await clear_attempts(identifier)
-    access = create_access_token(user["id"], user.get("email", ""), user["role"], user["tenant_id"])
+    access = create_access_token(user["id"], user.get("email", ""), user["role"], user["tenant_id"], user.get("session_version", 0))
     refresh = create_refresh_token(user["id"])
     set_auth_cookies(response, access, refresh)
     await audit_log(user["tenant_id"], user["id"], "LOGIN")
@@ -45,6 +45,7 @@ async def login(req: LoginReq, request: Request, response: Response):
 @router.post("/logout")
 async def logout(response: Response, user: dict = Depends(get_current_user)):
     clear_auth_cookies(response)
+    await db.users.update_one({"id": user["id"]}, {"$inc": {"session_version": 1}})
     await audit_log(user["tenant_id"], user["id"], "LOGOUT")
     return {"ok": True}
 
