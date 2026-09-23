@@ -20,6 +20,16 @@ async def delete_logo(user: dict = Depends(require_active_subscription)):
     return {"logo_url": None}
 
 
+@router.delete("/branding/logo")
+async def delete_logo(user: dict = Depends(require_active_subscription)):
+    await db.tenants.update_one(
+        {"id": user["tenant_id"]},
+        {"$set": {"logo_url": None, "updated_at": datetime.now(timezone.utc).isoformat()}},
+    )
+    await audit_log(user["tenant_id"], user["id"], "LOGO_DELETE")
+    return {"logo_url": None}
+
+
 @router.get("/dashboard")
 async def dashboard(user: dict = Depends(require_active_subscription)):
     tid = user["tenant_id"]
