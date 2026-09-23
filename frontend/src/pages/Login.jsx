@@ -60,7 +60,8 @@ export default function Login() {
                    className="w-full h-12 pl-11 pr-11 rounded-xl border border-slate-200 focus:border-[hsl(var(--primary))] focus:ring-2 focus:ring-[hsl(var(--primary))]/20 outline-none" placeholder="••••••••" />
             <button type="button" onClick={() => setShowPassword(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">{showPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button>
           </div>
-          <div className="flex justify-between items-center mb-3"><span className="text-xs text-slate-400">Akses aman untuk admin & Sub-Admin</span><button type="button" className="text-xs font-semibold text-violet-600">Lupa Password?</button></div>\n          <button type="submit" disabled={loading} data-testid="login-submit-button"
+          <div className="flex justify-between items-center mb-3"><span className="text-xs text-slate-400">Akses aman untuk admin & Sub-Admin</span></div>
+          <button type="submit" disabled={loading} data-testid="login-submit-button"
                   className="w-full h-12 rounded-xl text-white font-semibold flex items-center justify-center gap-2 active:scale-[0.98] transition disabled:opacity-60"
                   style={{ background: "hsl(var(--primary))" }}>
             {loading ? <Loader2 size={18} className="animate-spin" /> : null} Masuk
