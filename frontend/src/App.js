@@ -9,6 +9,7 @@ import Landing from "@/pages/Landing";
 import Login from "@/pages/Login";
 import Registration from "@/pages/Registration";
 import PaymentPage from "@/pages/PaymentPage";
+import RegistrationAdminPage from "@/pages/admin/RegistrationAdminPage";
 import AdminLayout from "@/pages/admin/AdminLayout";
 import Dashboard from "@/pages/admin/Dashboard";
 import CoveragePage from "@/pages/admin/CoveragePage";
@@ -126,6 +127,7 @@ function App() {
                 <Route path="tenants" element={<TenantsPage />} />
                 <Route path="billing" element={<BillingPlansPage />} />
                 <Route path="system-settings" element={<SystemSettingsPage />} />
+                <Route path="registrations" element={<RegistrationAdminPage />} />
               </Route>
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
