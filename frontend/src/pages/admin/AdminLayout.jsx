@@ -5,7 +5,7 @@ import { useTenant } from "@/context/TenantContext";
 import { BrandLogo } from "@/components/Brand";
 import {
   LayoutDashboard, Map, Package, Users, Palette, UserCog,
-  Building2, CreditCard, Settings, LogOut, Menu, X,
+  Building2, CreditCard, Settings, LogOut, Menu, X, ClipboardList,
 } from "lucide-react";
 import { api } from "@/lib/api";
 
@@ -22,6 +22,7 @@ const SUPER_NAV = [
   { to: "/admin/tenants", label: "Tenants", icon: Building2, testid: "admin-sidebar-nav-tenants" },
   { to: "/admin/billing", label: "Billing", icon: CreditCard, testid: "admin-sidebar-nav-billing" },
   { to: "/admin/system-settings", label: "System Settings", icon: Settings, testid: "admin-sidebar-nav-system-settings" },
+  { to: "/admin/registrations", label: "Pendaftaran", icon: ClipboardList, testid: "admin-sidebar-nav-registrations" },
 ];
 
 export default function AdminLayout() {
