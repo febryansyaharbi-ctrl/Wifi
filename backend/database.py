@@ -26,5 +26,8 @@ async def create_indexes():
     await db.subscription_plans.create_index([("active", 1), ("display_order", 1)])
     await db.subscriptions.create_index([("status", 1), ("expires_at", 1)])
     await db.login_attempts.create_index("identifier")
+    await db.subadmin_applications.create_index("id", unique=True)
+    await db.subadmin_applications.create_index([("status", 1), ("created_at", -1)])
+    await db.subadmin_applications.create_index("whatsapp")
     await db.audit_logs.create_index("tenant_id")
     await db.audit_logs.create_index("created_at")
