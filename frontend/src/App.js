@@ -8,6 +8,7 @@ import { api } from "@/lib/api";
 import Landing from "@/pages/Landing";
 import Login from "@/pages/Login";
 import Registration from "@/pages/Registration";
+import PaymentPage from "@/pages/PaymentPage";
 import AdminLayout from "@/pages/admin/AdminLayout";
 import Dashboard from "@/pages/admin/Dashboard";
 import CoveragePage from "@/pages/admin/CoveragePage";
@@ -113,6 +114,7 @@ function App() {
               <Route path="/t/:subdomain" element={<Landing />} />
               <Route path="/admin/login" element={<Login />} />
               <Route path="/daftar" element={<Registration />} />
+              <Route path="/pembayaran/:registrationId" element={<PaymentPage />} />
               <Route path="/login" element={<Navigate to="/admin/login" replace />} />
               <Route path="/admin" element={<Protected><SubscriptionGuard><AdminLayout /></SubscriptionGuard></Protected>}>
                 <Route index element={<Dashboard />} />
