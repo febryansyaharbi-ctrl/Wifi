@@ -1,10 +1,10 @@
 import uuid
 from datetime import datetime, timezone
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel, Field
 
 from database import db
-from security import normalize_phone
+from security import normalize_phone, require_roles, SUPER_ADMIN
 
 router = APIRouter(prefix="/api/registration", tags=["registration"])
 
@@ -98,3 +98,40 @@ async def confirm_payment(registration_id: str):
     if result.modified_count != 1:
         raise HTTPException(status_code=409, detail="Status pendaftaran berubah. Silakan muat ulang halaman.")
     return {"status": "PAYMENT_REPORTED", "payment_reported_at": now}
+
+
+@router.get("/admin/applications")
+async def admin_applications(user: dict = Depends(require_roles(SUPER_ADMIN))):
+    return await db.subadmin_applications.find(
+        {}, {"_id": 0}
+    ).sort("created_at", -1).to_list(200)
+
+
+@router.post("/admin/applications/{registration_id}/verify")
+async def verify_application(registration_id: str, user: dict = Depends(require_roles(SUPER_ADMIN))):
+    application = await db.subadmin_applications.find_one({"id": registration_id})
+    if not application:
+        raise HTTPException(status_code=404, detail="Pendaftaran tidak ditemukan")
+    if application.get("status") != "PAYMENT_REPORTED":
+        raise HTTPException(status_code=400, detail="Hanya pembayaran yang sudah dilaporkan yang dapat diverifikasi")
+    now = datetime.now(timezone.utc).isoformat()
+    await db.subadmin_applications.update_one(
+        {"id": registration_id, "status": "PAYMENT_REPORTED"},
+        {"$set": {"status": "APPROVED", "payment_verified_at": now, "verified_by": user["id"], "updated_at": now}},
+    )
+    return {"status": "APPROVED", "payment_verified_at": now}
+
+
+@router.post("/admin/applications/{registration_id}/reject")
+async def reject_application(registration_id: str, user: dict = Depends(require_roles(SUPER_ADMIN))):
+    application = await db.subadmin_applications.find_one({"id": registration_id})
+    if not application:
+        raise HTTPException(status_code=404, detail="Pendaftaran tidak ditemukan")
+    if application.get("status") not in {"PAYMENT_REPORTED", "PENDING_PAYMENT"}:
+        raise HTTPException(status_code=400, detail="Pendaftaran tidak dapat ditolak pada status ini")
+    now = datetime.now(timezone.utc).isoformat()
+    await db.subadmin_applications.update_one(
+        {"id": registration_id, "status": {"$in": ["PAYMENT_REPORTED", "PENDING_PAYMENT"]}},
+        {"$set": {"status": "REJECTED", "rejected_at": now, "rejected_by": user["id"], "updated_at": now}},
+    )
+    return {"status": "REJECTED", "rejected_at": now}
