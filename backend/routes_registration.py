@@ -58,3 +58,43 @@ async def create_registration(body: RegistrationBody):
     await db.subadmin_applications.insert_one(doc)
     doc.pop("_id", None)
     return doc
+
+
+@router.get("/payment-info/{registration_id}")
+async def payment_info(registration_id: str):
+    application = await db.subadmin_applications.find_one(
+        {"id": registration_id},
+        {"_id": 0, "id": 1, "name": 1, "whatsapp": 1, "plan_name": 1, "amount": 1, "status": 1},
+    )
+    if not application:
+        raise HTTPException(status_code=404, detail="Nomor pendaftaran tidak ditemukan")
+    if application.get("status") not in {"PENDING_PAYMENT", "PAYMENT_REPORTED"}:
+        raise HTTPException(status_code=400, detail="Pendaftaran ini tidak berada pada tahap pembayaran")
+    settings = await db.system_settings.find_one({"key": "payment_settings"}, {"_id": 0})
+    value = (settings or {}).get("value") or {}
+    return {
+        **application,
+        "payment": {
+            "whatsapp": value.get("whatsapp", ""),
+            "bank_accounts": value.get("bank_accounts", []),
+            "ewallets": value.get("ewallets", []),
+            "qris_image": value.get("qris_image"),
+        },
+    }
+
+
+@router.post("/{registration_id}/confirm-payment")
+async def confirm_payment(registration_id: str):
+    application = await db.subadmin_applications.find_one({"id": registration_id})
+    if not application:
+        raise HTTPException(status_code=404, detail="Nomor pendaftaran tidak ditemukan")
+    if application.get("status") != "PENDING_PAYMENT":
+        raise HTTPException(status_code=400, detail="Konfirmasi pembayaran sudah diproses atau tidak valid")
+    now = datetime.now(timezone.utc).isoformat()
+    result = await db.subadmin_applications.update_one(
+        {"id": registration_id, "status": "PENDING_PAYMENT"},
+        {"$set": {"status": "PAYMENT_REPORTED", "payment_reported_at": now, "updated_at": now}},
+    )
+    if result.modified_count != 1:
+        raise HTTPException(status_code=409, detail="Status pendaftaran berubah. Silakan muat ulang halaman.")
+    return {"status": "PAYMENT_REPORTED", "payment_reported_at": now}
