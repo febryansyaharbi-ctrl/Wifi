@@ -7,7 +7,7 @@ import { formatIDR, waLink } from "@/lib/format";
 import { BrandLogo, PrimaryButton } from "@/components/Brand";
 import LeadForm from "@/components/LeadForm";
 import CoverageMap from "@/components/CoverageMap";
-import { MapPin, Zap, ShieldCheck, MessageCircle, Wifi, ArrowRight, Signal, Gauge, Router, Menu, X, LogIn, UserPlus } from "lucide-react";
+import { MapPin, Zap, ShieldCheck, MessageCircle, Wifi, ArrowRight, Signal, Gauge, Router, Menu, X, LogIn } from "lucide-react";
 
 export default function Landing() {
   const { tenant, loading } = useTenant();
@@ -87,7 +87,6 @@ export default function Landing() {
             <div className="mt-8 space-y-3">
               <Link to={user ? "/admin" : "/admin/login"} onClick={() => setMenuOpen(false)} className="w-full flex items-center gap-3 rounded-2xl bg-slate-50 px-4 py-3.5 font-semibold text-slate-800"><LogIn size={19}/> {user ? "Dashboard Admin" : "Login Admin"}</Link>
               <button onClick={() => { setMenuOpen(false); startCheck(); }} className="w-full flex items-center gap-3 rounded-2xl bg-slate-50 px-4 py-3.5 font-semibold text-slate-800"><MapPin size={19}/> Cek Coverage</button>
-              <Link to="/daftar" onClick={() => setMenuOpen(false)} className="w-full flex items-center gap-3 rounded-2xl px-4 py-3.5 font-semibold text-white" style={{background:"hsl(var(--primary))"}}><UserPlus size={19}/> Daftar Jadi Sub-Admin</Link>
             </div>
           </aside>
         </div>
