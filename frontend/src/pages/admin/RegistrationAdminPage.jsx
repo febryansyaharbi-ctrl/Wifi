@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
-import { CheckCircle2, Clock, CreditCard, RefreshCw, XCircle } from "lucide-react";
+import { CheckCircle2, CreditCard, RefreshCw, XCircle } from "lucide-react";
 
 const LABELS = { PENDING_PAYMENT:"Menunggu Pembayaran", PAYMENT_REPORTED:"Menunggu Verifikasi", APPROVED:"Disetujui", REJECTED:"Ditolak", ACTIVATION_PENDING:"Menunggu Aktivasi", ACTIVATED:"Aktif" };
 
@@ -43,7 +43,7 @@ export default function RegistrationAdminPage() {
                 <p className="text-xs text-slate-400 mt-2">ID: {a.id}</p>
                 {a.payment_reported_at && <p className="text-xs text-emerald-600 mt-1">Dilaporkan: {new Date(a.payment_reported_at).toLocaleString("id-ID")}</p>}
               </div>
-              {a.status === "PAYMENT_REPORTED" && <div className="flex gap-2"><button disabled={busy === a.id+"verify"} onClick={() => action(a.id,"verify")} className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white bg-emerald-600 disabled:opacity-50"><CheckCircle2 size={16}/> Verifikasi</button><button disabled={busy === a.id+"reject"} onClick={() => action(a.id,"reject")} className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-rose-700 bg-rose-50 border border-rose-200 disabled:opacity-50"><XCircle size={16}/> Tolak</button></div>}
+              {(a.status === "PAYMENT_REPORTED" || a.status === "PENDING_PAYMENT") && <div className="flex gap-2 flex-wrap"><button disabled={a.status !== "PAYMENT_REPORTED" || busy === a.id+"verify"} onClick={() => action(a.id,"verify")} title={a.status !== "PAYMENT_REPORTED" ? "Tunggu pendaftar melaporkan pembayaran" : "Setujui pembayaran"} className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white bg-emerald-600 disabled:opacity-40"><CheckCircle2 size={16}/> Disetujui</button><button disabled={busy === a.id+"reject"} onClick={() => action(a.id,"reject")} className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-rose-700 bg-rose-50 border border-rose-200 disabled:opacity-50"><XCircle size={16}/> Ditolak</button></div>}
             </div>
           </div>
         ))}
