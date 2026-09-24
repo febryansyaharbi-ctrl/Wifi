@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { useTenant } from "@/context/TenantContext";
 import { BrandLogo } from "@/components/Brand";
 import { api, formatApiError } from "@/lib/api";
-import { Lock, UserRound, Loader2, Eye, EyeOff } from "lucide-react";
+import { Lock, UserRound, Loader2, Eye, EyeOff, UserPlus, ArrowRight } from "lucide-react";
 
 export default function Login() {
   const { login, user } = useAuth();
@@ -60,7 +60,7 @@ export default function Login() {
                    className="w-full h-12 pl-11 pr-11 rounded-xl border border-slate-200 focus:border-[hsl(var(--primary))] focus:ring-2 focus:ring-[hsl(var(--primary))]/20 outline-none" placeholder="••••••••" />
             <button type="button" onClick={() => setShowPassword(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">{showPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button>
           </div>
-          <div className="flex justify-between items-center mb-3"><span className="text-xs text-slate-400">Akses aman untuk admin & Sub-Admin</span></div>
+          <div className="flex justify-between items-center mb-3"><span className="text-xs text-slate-400">Akses aman untuk admin & Sub-Admin</span></div>\n          <div className="mb-5 rounded-2xl bg-violet-50 border border-violet-100 p-4">\n            <div className="flex items-start gap-3"><UserPlus size={20} className="mt-0.5 text-violet-700 shrink-0"/><div><div className="font-semibold text-slate-900 text-sm">Ingin menjadi Sub-Admin?</div><p className="text-xs text-slate-600 mt-1 leading-5">{promo || "Daftar sekarang untuk mendapatkan dashboard mandiri, branding WiFi, coverage GIS, leads terisolasi, dan billing."}</p><Link to="/daftar" className="mt-3 inline-flex items-center gap-1.5 text-sm font-bold text-violet-700">Daftar Sekarang <ArrowRight size={15}/></Link></div></div>\n          </div>
           <button type="submit" disabled={loading} data-testid="login-submit-button"
                   className="w-full h-12 rounded-xl text-white font-semibold flex items-center justify-center gap-2 active:scale-[0.98] transition disabled:opacity-60"
                   style={{ background: "hsl(var(--primary))" }}>
