@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { api, formatApiError } from "@/lib/api";
 import { formatIDR } from "@/lib/format";
 import { BrandLogo } from "@/components/Brand";
-import { ArrowLeft, ArrowRight, CheckCircle2, Loader2, UserPlus, MessageCircle } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, Loader2, UserPlus, MessageCircle, CreditCard } from "lucide-react";
 
 export default function Registration() {
   const [plans, setPlans] = useState([]);
