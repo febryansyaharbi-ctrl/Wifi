@@ -16,6 +16,7 @@ export default function Login() {
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const cleanPromo = (promo || "").replaceAll("\\n", "\n");
   useEffect(() => { api.get("/system/login-promo").then(r => setPromo(r.data.text)).catch(() => {}); }, []);
 
   useEffect(() => { if (user) nav("/admin", { replace: true }); }, [user, nav]);
@@ -37,7 +38,7 @@ export default function Login() {
         <BrandLogo tenant={{ ...tenant, logo_url: null }} className="[&_span]:text-white" />
         <div>
           <h2 className="font-display text-4xl font-extrabold leading-tight">Panel Admin<br />WiFi Coverage</h2>
-          <p className="mt-4 text-white/80 max-w-sm">{promo || "Jadilah Sub-Admin WiFi dan kembangkan layanan internet Anda dengan dashboard, branding, leads, coverage GIS, dan paket billing."}</p>
+          <p className="mt-4 text-white/80 max-w-sm">{cleanPromo || "Jadilah Sub-Admin WiFi dan kembangkan layanan internet Anda dengan dashboard, branding, leads, coverage GIS, dan paket billing."}</p>
         </div>
         <p className="text-white/60 text-sm">© {new Date().getFullYear()} WiFi Coverage SaaS</p>
       </div>
@@ -62,7 +63,7 @@ export default function Login() {
           </div>
           <div className="flex justify-between items-center mb-3"><span className="text-xs text-slate-400">Akses aman untuk admin & Sub-Admin</span></div>
           <div className="mb-5 rounded-2xl bg-violet-50 border border-violet-100 p-4">
-            <div className="flex items-start gap-3"><UserPlus size={20} className="mt-0.5 text-violet-700 shrink-0"/><div><div className="font-semibold text-slate-900 text-sm">Ingin menjadi Sub-Admin?</div><p className="text-xs text-slate-600 mt-1 leading-5">{promo || "Daftar sekarang untuk mendapatkan dashboard mandiri, branding WiFi, coverage GIS, leads terisolasi, dan billing."}</p><Link to="/daftar" className="mt-3 inline-flex items-center gap-1.5 text-sm font-bold text-violet-700">Daftar Sekarang <ArrowRight size={15}/></Link></div></div>
+            <div className="flex items-start gap-3"><UserPlus size={20} className="mt-0.5 text-violet-700 shrink-0"/><div><div className="font-semibold text-slate-900 text-sm">Ingin menjadi Sub-Admin?</div><p className="text-xs text-slate-600 mt-1 leading-5">{cleanPromo || "Daftar sekarang untuk mendapatkan dashboard mandiri, branding WiFi, coverage GIS, leads terisolasi, dan billing."}</p><Link to="/daftar" className="mt-3 inline-flex items-center gap-1.5 text-sm font-bold text-violet-700">Daftar Sekarang <ArrowRight size={15}/></Link></div></div>
           </div>
           <button type="submit" disabled={loading} data-testid="login-submit-button"
                   className="w-full h-12 rounded-xl text-white font-semibold flex items-center justify-center gap-2 active:scale-[0.98] transition disabled:opacity-60"
