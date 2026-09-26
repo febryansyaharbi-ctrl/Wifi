@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
-import { CheckCircle2, CreditCard, RefreshCw, XCircle, Trash2, Copy, ExternalLink } from "lucide-react";
+import { waLink } from "@/lib/format";
+import { CheckCircle2, CreditCard, RefreshCw, XCircle, Trash2, Copy, ExternalLink, MessageCircle } from "lucide-react";
 
 const LABELS = {
   PENDING_PAYMENT: "Menunggu Pembayaran",
@@ -168,6 +169,9 @@ export default function RegistrationAdminPage() {
                     <button onClick={() => copyLink(a.activation_url)} className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white bg-violet-600">
                       <Copy size={16}/> Salin Link
                     </button>
+                    <a href={waLink(a.whatsapp, `Halo ${a.name}, pembayaran pendaftaran Sub-Admin Anda sudah diverifikasi. Silakan lengkapi aktivasi akun melalui link berikut:\\n\\n${a.activation_url}\\n\\nLink ini hanya dapat digunakan satu kali dan berlaku sampai ${new Date(a.activation_expires_at).toLocaleString("id-ID")}.`)} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 px-4 py-2.5 text-sm font-semibold">
+                      <MessageCircle size={16}/> Kirim via WA
+                    </a>
                     <a href={a.activation_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700">
                       <ExternalLink size={16}/> Buka
                     </a>
