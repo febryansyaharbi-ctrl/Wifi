@@ -1,4 +1,5 @@
 import uuid
+import re
 from datetime import datetime, timezone
 from fastapi import APIRouter, Request, Response, HTTPException, Depends
 from pydantic import BaseModel
@@ -33,6 +34,15 @@ async def login(req: LoginReq, request: Request, response: Response):
     user = await db.users.find_one({
         "$or": [{"email": email}, {"username": identifier_value.lower()}]
     })
+    # Backward compatibility: older Sub-Admin accounts created from the
+    # Super Admin tenant form did not store a username. In that case, allow
+    # the local-part of the registered email to act as the username.
+    if not user and "@" not in identifier_value:
+        local = re.escape(identifier_value.lower())
+        user = await db.users.find_one({
+            "username": {"$exists": False},
+            "email": {"$regex": f"^{local}@"}
+        })
     if not user or not verify_password(req.password, user.get("password_hash", "")):
         await register_failed(identifier)
         raise HTTPException(status_code=401, detail="Username/email atau password salah")
