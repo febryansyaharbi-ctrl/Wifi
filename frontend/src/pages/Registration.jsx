@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { api, formatApiError } from "@/lib/api";
 import { formatIDR } from "@/lib/format";
@@ -12,6 +13,7 @@ export default function Registration() {
   const [error, setError] = useState("");
   const [result, setResult] = useState(null);
   const [form, setForm] = useState({ name: "", whatsapp: "", plan_id: "" });
+  const navigate = useNavigate();
 
   useEffect(() => {
     api.get("/registration/plans")
@@ -31,7 +33,7 @@ export default function Registration() {
     setSubmitting(true);
     try {
       const { data } = await api.post("/registration", form);
-      setResult(data);
+      navigate(`/pembayaran/${data.id}`);
     } catch (e2) {
       setError(formatApiError(e2?.response?.data?.detail));
     } finally {
