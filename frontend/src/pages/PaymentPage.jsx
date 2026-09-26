@@ -28,14 +28,14 @@ export default function PaymentPage() {
     try {
       await api.post(`/registration/${registrationId}/confirm-payment`);
       const text = [
-        "Halo Super Admin, saya ingin konfirmasi pembayaran pendaftaran Sub-Admin.",
+        "Halo Super Admin, saya ingin mengirim bukti pembayaran pendaftaran Sub-Admin.",
         `Nama: ${data.name}`,
         `WhatsApp: +${data.whatsapp}`,
         `Paket: ${data.plan_name}`,
         `Nominal: ${formatIDR(data.amount)}`,
         `Nomor Pendaftaran: ${data.id}`,
         "",
-        "Saya akan mengirim bukti pembayaran melalui WhatsApp ini. Mohon diverifikasi.",
+        "Saya melampirkan bukti pembayaran pada chat WhatsApp ini. Mohon diverifikasi dan diproses untuk aktivasi akun.",
       ].join("\n");
       window.open(waLink(data.payment.whatsapp, text), "_blank");
       setData((v) => ({ ...v, status: "PAYMENT_REPORTED" }));
