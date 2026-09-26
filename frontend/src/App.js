@@ -9,6 +9,7 @@ import Landing from "@/pages/Landing";
 import Login from "@/pages/Login";
 import Registration from "@/pages/Registration";
 import PaymentPage from "@/pages/PaymentPage";
+import ActivationPage from "@/pages/ActivationPage";
 import RegistrationAdminPage from "@/pages/admin/RegistrationAdminPage";
 import AdminLayout from "@/pages/admin/AdminLayout";
 import Dashboard from "@/pages/admin/Dashboard";
@@ -116,6 +117,7 @@ function App() {
               <Route path="/admin/login" element={<Login />} />
               <Route path="/daftar" element={<Registration />} />
               <Route path="/pembayaran/:registrationId" element={<PaymentPage />} />
+              <Route path="/aktivasi-admin" element={<ActivationPage />} />
               <Route path="/login" element={<Navigate to="/admin/login" replace />} />
               <Route path="/admin" element={<Protected><SubscriptionGuard><AdminLayout /></SubscriptionGuard></Protected>}>
                 <Route index element={<Dashboard />} />
