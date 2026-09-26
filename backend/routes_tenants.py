@@ -52,10 +52,22 @@ async def list_tenants(user: dict = Depends(require_roles(SUPER_ADMIN))):
 async def create_tenant(body: TenantCreate, user: dict = Depends(require_roles(SUPER_ADMIN))):
     sub = clean_subdomain(body.subdomain)
     email = body.admin_email.lower().strip()
+    # Tenant yang dibuat dari panel Super Admin juga harus memiliki username,
+    # karena seluruh akun Sub-Admin dapat login memakai username.
+    username = email.split("@", 1)[0].strip().lower()
+    username = re.sub(r"[^a-z0-9._-]+", "-", username).strip(".-_")
+    if len(username) < 3:
+        username = "subadmin"
     if await db.tenants.find_one({"subdomain": sub}):
         raise HTTPException(status_code=409, detail="Subdomain sudah digunakan")
     if await db.users.find_one({"email": email}):
         raise HTTPException(status_code=409, detail="Email admin sudah digunakan")
+    if await db.users.find_one({"username": username}):
+        base = username[:45]
+        suffix = 2
+        while await db.users.find_one({"username": f"{base}{suffix}"}):
+            suffix += 1
+        username = f"{base}{suffix}"
     try:
         phone = normalize_phone(body.whatsapp_number)
     except ValueError:
@@ -73,7 +85,7 @@ async def create_tenant(body: TenantCreate, user: dict = Depends(require_roles(S
         "created_at": now, "updated_at": now,
     }
     admin = {
-        "id": str(uuid.uuid4()), "email": email,
+        "id": str(uuid.uuid4()), "email": email, "username": username,
         "password_hash": hash_password(body.admin_password),
         "name": body.admin_name.strip(), "role": SUB_ADMIN,
         "tenant_id": tenant_id, "created_at": now,
