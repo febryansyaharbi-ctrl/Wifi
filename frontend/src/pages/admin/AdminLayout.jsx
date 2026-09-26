@@ -38,21 +38,31 @@ export default function AdminLayout() {
       return;
     }
     let alive = true;
-    const loadSubscription = async () => {
+    const loadTenantAndSubscription = async () => {
       try {
-        const { data } = await api.get("/billing/me");
-        if (alive) setSubscription(data);
+        const [{ data: tenantData }, { data: billingData }] = await Promise.all([
+          api.get("/tenant/me"),
+          api.get("/billing/me"),
+        ]);
+        if (!alive) return;
+        if (tenantData && tenantData.status !== "LOCKED") {
+          setTenant(tenantData);
+          document.title = tenantData.wifi_name
+            ? tenantData.wifi_name + " — Admin"
+            : (tenantData.name || "WiFi") + " — Admin";
+        }
+        setSubscription(billingData);
       } catch {
         if (alive) setSubscription(null);
       }
     };
-    loadSubscription();
-    const timer = window.setInterval(loadSubscription, 60000);
+    loadTenantAndSubscription();
+    const timer = window.setInterval(loadTenantAndSubscription, 60000);
     return () => {
       alive = false;
       window.clearInterval(timer);
     };
-  }, [user?.role]);
+  }, [user?.role, setTenant]);
 
   const doLogout = async () => { await logout(); nav("/login", { replace: true }); };
 
