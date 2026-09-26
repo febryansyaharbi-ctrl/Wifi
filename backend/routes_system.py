@@ -39,6 +39,11 @@ class PaymentSettingsBody(BaseModel):
 async def get_login_promo():
     doc = await db.system_settings.find_one({"key": "login_promo"}, {"_id": 0})
     text = (doc or {}).get("value") or DEFAULT_LOGIN_PROMO
+    # Normalisasi newline yang tersimpan sebagai teks literal (mis. \\n atau \\\\n).
+    while "\\n" in text:
+        text = text.replace("\\n", "\n")
+    while "\\r" in text:
+        text = text.replace("\\r", "\r")
     plan = await db.subscription_plans.find_one({"active": True}, {"_id": 0, "price": 1}, sort=[("price", 1)])
     price = f"Rp {int(plan.get("price", 0)):,}".replace(",", ".") if plan else "harga paket aktif"
     return {"text": text.replace("{PRICE_START}", price), "price_start": price}
