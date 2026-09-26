@@ -16,7 +16,7 @@ export default function Login() {
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const cleanPromo = (promo || "").replaceAll("\\n", "\n");
+  const cleanPromo = String(promo || "").replace(/\\+r?\\+n/g, "\n").trim();
   useEffect(() => { api.get("/system/login-promo").then(r => setPromo(r.data.text)).catch(() => {}); }, []);
 
   useEffect(() => { if (user) nav("/admin", { replace: true }); }, [user, nav]);
