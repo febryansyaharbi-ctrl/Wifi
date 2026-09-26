@@ -176,8 +176,8 @@ async def verify_application(registration_id: str, user: dict = Depends(require_
     application = await db.subadmin_applications.find_one({"id": registration_id})
     if not application:
         raise HTTPException(status_code=404, detail="Pendaftaran tidak ditemukan")
-    if application.get("status") != "PAYMENT_REPORTED":
-        raise HTTPException(status_code=400, detail="Hanya pembayaran yang sudah dilaporkan yang dapat diverifikasi")
+    if application.get("status") not in {"PAYMENT_REPORTED", "PENDING_PAYMENT"}:
+        raise HTTPException(status_code=400, detail="Pendaftaran ini sudah diproses dan tidak dapat diverifikasi lagi")
 
     now = datetime.now(timezone.utc)
     token = secrets.token_urlsafe(32)
@@ -186,7 +186,7 @@ async def verify_application(registration_id: str, user: dict = Depends(require_
     expires_iso = expires.isoformat()
 
     result = await db.subadmin_applications.update_one(
-        {"id": registration_id, "status": "PAYMENT_REPORTED"},
+        {"id": registration_id, "status": {"$in": ["PAYMENT_REPORTED", "PENDING_PAYMENT"]}},
         {"$set": {
             "status": "ACTIVATION_PENDING",
             "payment_verified_at": now_iso,
