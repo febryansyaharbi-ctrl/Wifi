@@ -150,6 +150,8 @@ async def admin_applications(user: dict = Depends(require_roles(SUPER_ADMIN))):
             if not expired:
                 doc["activation_url"] = _activation_url(doc["activation_token"])
                 doc["activation_expires_at"] = expires
+            doc.pop("activation_token", None)
+            doc.pop("activation_token_hash", None)
     return docs
 
 
