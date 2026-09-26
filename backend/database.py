@@ -29,5 +29,6 @@ async def create_indexes():
     await db.subadmin_applications.create_index("id", unique=True)
     await db.subadmin_applications.create_index([("status", 1), ("created_at", -1)])
     await db.subadmin_applications.create_index("whatsapp")
+    await db.subadmin_applications.create_index([("status", 1), ("activation_expires_at", 1)])
     await db.audit_logs.create_index("tenant_id")
     await db.audit_logs.create_index("created_at")
