@@ -35,10 +35,6 @@ export default function AdminLayout() {
   const [adminTenant, setAdminTenant] = useState(tenant);
 
   useEffect(() => {
-    setTenantRef.current = setTenant;
-  }, [setTenant]);
-
-  useEffect(() => {
     let alive = true;
     const loadTenantAndSubscription = async () => {
       try {
@@ -89,7 +85,7 @@ export default function AdminLayout() {
               <NavLink key={n.label} to={n.to} data-testid={n.testid} onClick={() => setOpen(false)}
                 className={({ isActive }) => `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition ${isActive ? "text-white" : "text-slate-600 hover:bg-slate-100"}`}
                 style={({ isActive }) => (isActive ? { background: "hsl(var(--primary))" } : {})}>
-                <n.icon size={18} /> <n.label />
+                <n.icon size={18} /> {n.label}
               </NavLink>
             ) : (
               <div key={n.label} className="flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 cursor-not-allowed">
