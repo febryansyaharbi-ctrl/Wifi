@@ -31,21 +31,18 @@ export default function AdminLayout() {
   const nav = useNavigate();
   const [open, setOpen] = useState(false);
   const [subscription, setSubscription] = useState(null);
+  const [adminTenant, setAdminTenant] = useState(tenant);
 
   useEffect(() => {
-    if (user?.role !== "SUB_ADMIN") {
-      setSubscription(null);
-      return;
-    }
     let alive = true;
     const loadTenantAndSubscription = async () => {
       try {
-        const [{ data: tenantData }, { data: billingData }] = await Promise.all([
-          api.get("/tenant/me"),
-          api.get("/billing/me"),
-        ]);
+        const tenantRequest = api.get("/tenant/me");
+        const billingRequest = user?.role === "SUB_ADMIN" ? api.get("/billing/me") : Promise.resolve({ data: null });
+        const [{ data: tenantData }, { data: billingData }] = await Promise.all([tenantRequest, billingRequest]);
         if (!alive) return;
         if (tenantData && tenantData.status !== "LOCKED") {
+          setAdminTenant(tenantData);
           setTenant(tenantData);
           document.title = tenantData.wifi_name
             ? tenantData.wifi_name + " — Admin"
@@ -69,7 +66,7 @@ export default function AdminLayout() {
   const SidebarInner = () => (
     <>
       <div className="h-16 flex items-center px-5 border-b border-slate-200">
-        <BrandLogo tenant={tenant} size={32} />
+        <BrandLogo tenant={adminTenant || tenant} size={32} />
       </div>
       <nav className="flex-1 overflow-y-auto p-3 space-y-1">
         {NAV.map((n) => (
@@ -127,7 +124,7 @@ export default function AdminLayout() {
       <div className="flex-1 lg:ml-64 min-w-0">
         <header className="lg:hidden h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 sticky top-0 z-30">
           <button onClick={() => setOpen(true)} data-testid="admin-mobile-menu"><Menu size={24} /></button>
-          <BrandLogo tenant={tenant} size={28} />
+          <BrandLogo tenant={adminTenant || tenant} size={28} />
           <span className="w-6" />
         </header>
         <main className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto"><Outlet /></main>
