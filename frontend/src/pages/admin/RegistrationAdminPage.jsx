@@ -37,7 +37,7 @@ export default function RegistrationAdminPage() {
       const { data } = await api.post("/registration/admin/applications/" + id + "/" + type);
       if (type === "verify" && data?.activation_url) {
         await navigator.clipboard?.writeText(data.activation_url).catch(() => {});
-        setMessage("Pembayaran disetujui. Link aktivasi 1 kali berhasil dibuat dan disalin.");
+        setMessage("Pendaftaran disetujui. Link aktivasi 1 kali berhasil dibuat dan disalin.");
       } else {
         setMessage(type === "verify" ? "Pembayaran berhasil diverifikasi." : "Pendaftaran ditolak.");
       }
@@ -155,8 +155,8 @@ export default function RegistrationAdminPage() {
               <div className="flex gap-2 flex-wrap lg:justify-end">
 {(a.status === "PAYMENT_REPORTED" || a.status === "PENDING_PAYMENT") && (
                   <>
-                    <button disabled={busy === a.id+"verify"} onClick={() => action(a.id,"verify")} title={a.status === "PAYMENT_REPORTED" ? "Setujui pembayaran yang sudah dilaporkan" : "Tetap setujui jika pendaftar lupa klik Kirim Bukti Pembayaran"} className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white bg-emerald-600 disabled:opacity-40">
-                      <CheckCircle2 size={16}/> Disetujui
+                    <button disabled={busy === a.id+"verify"} onClick={() => action(a.id,"verify")} title={a.status === "PAYMENT_REPORTED" ? "Setujui pembayaran yang sudah dilaporkan dan buat link aktivasi" : "Pendaftar belum klik Kirim Bukti Pembayaran. Super Admin tetap dapat menyetujui dan membuat link aktivasi."} className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white bg-emerald-600 disabled:opacity-40">
+                      <CheckCircle2 size={16}/> Setujui & Buat Link
                     </button>
                     <button disabled={busy === a.id+"reject"} onClick={() => action(a.id,"reject")} className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-rose-700 bg-rose-50 border border-rose-200 disabled:opacity-50">
                       <XCircle size={16}/> Ditolak
