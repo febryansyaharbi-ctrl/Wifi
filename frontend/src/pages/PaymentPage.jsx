@@ -19,6 +19,24 @@ export default function PaymentPage() {
       .finally(() => setLoading(false));
   }, [registrationId]);
 
+  const openWhatsApp = () => {
+    if (!data?.payment?.whatsapp) {
+      setError("WhatsApp Super Admin belum dikonfigurasi. Silakan hubungi Super Admin melalui kontak resmi.");
+      return;
+    }
+    const text = [
+      "Halo Super Admin, saya ingin mengirim bukti pembayaran pendaftaran Sub-Admin.",
+      `Nama: ${data.name}`,
+      `WhatsApp: +${data.whatsapp}`,
+      `Paket: ${data.plan_name}`,
+      `Nominal: ${formatIDR(data.amount)}`,
+      `Nomor Pendaftaran: ${data.id}`,
+      "",
+      "Saya melampirkan bukti pembayaran pada chat WhatsApp ini. Mohon diverifikasi dan diproses untuk aktivasi akun.",
+    ].join("\n");
+    window.open(waLink(data.payment.whatsapp, text), "_blank");
+  };
+
   const confirm = async () => {
     if (!data?.payment?.whatsapp) {
       setError("WhatsApp Super Admin belum dikonfigurasi. Silakan hubungi Super Admin melalui kontak resmi.");
@@ -27,17 +45,7 @@ export default function PaymentPage() {
     setBusy(true); setError("");
     try {
       await api.post(`/registration/${registrationId}/confirm-payment`);
-      const text = [
-        "Halo Super Admin, saya ingin mengirim bukti pembayaran pendaftaran Sub-Admin.",
-        `Nama: ${data.name}`,
-        `WhatsApp: +${data.whatsapp}`,
-        `Paket: ${data.plan_name}`,
-        `Nominal: ${formatIDR(data.amount)}`,
-        `Nomor Pendaftaran: ${data.id}`,
-        "",
-        "Saya melampirkan bukti pembayaran pada chat WhatsApp ini. Mohon diverifikasi dan diproses untuk aktivasi akun.",
-      ].join("\n");
-      window.open(waLink(data.payment.whatsapp, text), "_blank");
+      openWhatsApp();
       setData((v) => ({ ...v, status: "PAYMENT_REPORTED" }));
     } catch (e) {
       setError(formatApiError(e?.response?.data?.detail));
@@ -97,7 +105,7 @@ export default function PaymentPage() {
 
           <div>
             <div className="lg:sticky lg:top-6 bg-white rounded-3xl border border-slate-200 p-6 shadow-sm">
-              {reported ? <><CheckCircle2 className="text-emerald-500 mx-auto" size={48}/><h2 className="mt-4 text-center font-bold text-slate-900">Bukti Pembayaran Dikirim</h2><p className="mt-2 text-center text-sm text-slate-500">Status menjadi menunggu verifikasi Super Admin. Silakan kirim bukti transfer/foto pembayaran pada chat WhatsApp yang terbuka.</p></> :
+              {reported ? <><CheckCircle2 className="text-emerald-500 mx-auto" size={48}/><h2 className="mt-4 text-center font-bold text-slate-900">Menunggu Verifikasi Super Admin</h2><p className="mt-2 text-center text-sm text-slate-500">Pendaftaran Anda sudah otomatis masuk ke daftar verifikasi Super Admin. Silakan lakukan pembayaran sesuai tujuan di atas, lalu kirim bukti pembayaran melalui WhatsApp.</p><button onClick={openWhatsApp} className="mt-5 w-full h-12 rounded-xl text-white font-semibold inline-flex items-center justify-center gap-2" style={{background:"hsl(var(--primary))"}}><MessageCircle size={18}/> Kirim Bukti via WhatsApp</button></> :
               <><h2 className="font-bold text-slate-900">Kirim Bukti Pembayaran</h2><p className="mt-2 text-sm text-slate-500 leading-6">Setelah transfer, klik tombol di bawah. WhatsApp Admin akan terbuka dengan template chat pendaftar dan Anda dapat langsung melampirkan bukti pembayaran.</p><button onClick={confirm} disabled={busy} className="mt-5 w-full h-12 rounded-xl text-white font-semibold inline-flex items-center justify-center gap-2 disabled:opacity-60" style={{background:"hsl(var(--primary))"}}>{busy ? <Loader2 size={18} className="animate-spin"/> : <MessageCircle size={18}/>} {busy ? "Membuka WhatsApp..." : "Kirim Bukti Pembayaran"}</button></>}
             </div>
           </div>
