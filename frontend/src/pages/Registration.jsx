@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { api, formatApiError } from "@/lib/api";
 import { formatIDR } from "@/lib/format";
 import { BrandLogo } from "@/components/Brand";
+import { useAuth } from "@/context/AuthContext";
 import { ArrowLeft, ArrowRight, CheckCircle2, Loader2, UserPlus, MessageCircle, CreditCard } from "lucide-react";
 
 export default function Registration() {
@@ -14,6 +15,7 @@ export default function Registration() {
   const [result, setResult] = useState(null);
   const [form, setForm] = useState({ name: "", whatsapp: "", plan_id: "" });
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
   useEffect(() => {
     api.get("/registration/plans")
@@ -63,16 +65,16 @@ export default function Registration() {
             </div>
             <div className="mt-6 rounded-2xl bg-violet-50 border border-violet-100 p-4 text-left">
               <p className="text-sm text-violet-800 leading-6">
-                Pendaftaran Anda berada pada tahap <strong>menunggu pembayaran</strong>. Jangan mengirim bukti pembayaran sebelum tujuan pembayaran resmi ditampilkan pada tahap pembayaran.
+                Pendaftaran Anda sudah masuk status <strong>menunggu verifikasi Super Admin</strong>. Silakan lakukan pembayaran sesuai tujuan resmi pada halaman pembayaran, lalu kirim bukti melalui WhatsApp.
               </p>
             </div>
             <div className="mt-6 flex flex-col sm:flex-row gap-3">
               <Link to="/" className="flex-1 inline-flex justify-center items-center gap-2 rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-700">
                 Kembali ke Website
               </Link>
-              <Link to="/admin/login" className="flex-1 inline-flex justify-center items-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold text-white" style={{background:"hsl(var(--primary))"}}>
-                Login Admin <ArrowRight size={16}/>
-              </Link>
+              <button type="button" onClick={async () => { await logout(); navigate("/admin/login", { replace: true }); }} className="flex-1 inline-flex justify-center items-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold text-white" style={{background:"hsl(var(--primary))"}}>
+                Kembali ke Login <ArrowRight size={16}/>
+              </button>
             </div>
           </div>
         </div>
