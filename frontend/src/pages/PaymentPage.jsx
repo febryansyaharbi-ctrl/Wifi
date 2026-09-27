@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { api, formatApiError } from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
 import { formatIDR, waLink } from "@/lib/format";
 import { BrandLogo } from "@/components/Brand";
 import { ArrowLeft, CheckCircle2, CreditCard, Loader2, MessageCircle, QrCode } from "lucide-react";
 
 export default function PaymentPage() {
   const { registrationId } = useParams();
+  const { logout } = useAuth();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -62,7 +64,12 @@ export default function PaymentPage() {
       <header className="bg-white border-b border-slate-200">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <BrandLogo />
-          <Link to="/daftar" className="inline-flex items-center gap-2 text-sm font-semibold text-slate-600"><ArrowLeft size={16}/> Pendaftaran</Link>
+          <div className="flex items-center gap-3">
+            <Link to="/daftar" className="inline-flex items-center gap-2 text-sm font-semibold text-slate-600"><ArrowLeft size={16}/> Pendaftaran</Link>
+            <button type="button" onClick={async () => { await logout(); window.location.href = "/admin/login"; }} className="inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-semibold text-white" style={{background:"hsl(var(--primary))"}}>
+              Login Admin
+            </button>
+          </div>
         </div>
       </header>
       <main className="max-w-4xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
