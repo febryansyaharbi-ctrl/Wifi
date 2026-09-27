@@ -87,7 +87,8 @@ async def create_registration(body: RegistrationBody):
         "plan_name": plan["name"],
         "amount": plan["price"],
         "duration_days": plan["duration_days"],
-        "status": "PENDING_PAYMENT",
+        "status": "PAYMENT_REPORTED",
+        "payment_reported_at": now,
         "created_at": now,
         "updated_at": now,
     }
@@ -125,6 +126,8 @@ async def confirm_payment(registration_id: str):
     application = await db.subadmin_applications.find_one({"id": registration_id})
     if not application:
         raise HTTPException(status_code=404, detail="Nomor pendaftaran tidak ditemukan")
+    if application.get("status") == "PAYMENT_REPORTED":
+        return {"status": "PAYMENT_REPORTED", "payment_reported_at": application.get("payment_reported_at")}
     if application.get("status") != "PENDING_PAYMENT":
         raise HTTPException(status_code=400, detail="Konfirmasi pembayaran sudah diproses atau tidak valid")
     now = datetime.now(timezone.utc).isoformat()
