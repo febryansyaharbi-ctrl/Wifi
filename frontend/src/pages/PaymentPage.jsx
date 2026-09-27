@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { api, formatApiError } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { formatIDR, waLink } from "@/lib/format";
@@ -8,6 +8,7 @@ import { ArrowLeft, CheckCircle2, CreditCard, Loader2, MessageCircle, QrCode } f
 
 export default function PaymentPage() {
   const { registrationId } = useParams();
+  const navigate = useNavigate();
   const { logout } = useAuth();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -39,6 +40,11 @@ export default function PaymentPage() {
     window.open(waLink(data.payment.whatsapp, text), "_blank");
   };
 
+  const goToAdminLogin = async () => {
+    await logout();
+    navigate("/admin/login", { replace: true });
+  };
+
   const confirm = async () => {
     if (!data?.payment?.whatsapp) {
       setError("WhatsApp Super Admin belum dikonfigurasi. Silakan hubungi Super Admin melalui kontak resmi.");
@@ -66,7 +72,7 @@ export default function PaymentPage() {
           <BrandLogo />
           <div className="flex items-center gap-3">
             <Link to="/daftar" className="inline-flex items-center gap-2 text-sm font-semibold text-slate-600"><ArrowLeft size={16}/> Pendaftaran</Link>
-            <button type="button" onClick={async () => { await logout(); window.location.href = "/admin/login"; }} className="inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-semibold text-white" style={{background:"hsl(var(--primary))"}}>
+            <button type="button" onClick={goToAdminLogin} className="inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-semibold text-white" style={{background:"hsl(var(--primary))"}}>
               Login Admin
             </button>
           </div>
