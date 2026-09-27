@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { useTenant } from "@/context/TenantContext";
@@ -28,10 +28,15 @@ const SUPER_NAV = [
 export default function AdminLayout() {
   const { user, logout } = useAuth();
   const { tenant, setTenant } = useTenant();
+  const setTenantRef = useRef(setTenant);
   const nav = useNavigate();
   const [open, setOpen] = useState(false);
   const [subscription, setSubscription] = useState(null);
   const [adminTenant, setAdminTenant] = useState(tenant);
+
+  useEffect(() => {
+    setTenantRef.current = setTenant;
+  }, [setTenant]);
 
   useEffect(() => {
     let alive = true;
@@ -43,7 +48,7 @@ export default function AdminLayout() {
         if (!alive) return;
         if (tenantData && tenantData.status !== "LOCKED") {
           setAdminTenant(tenantData);
-          setTenant(tenantData);
+          setTenantRef.current(tenantData);
           document.title = tenantData.wifi_name
             ? tenantData.wifi_name + " — Admin"
             : (tenantData.name || "WiFi") + " — Admin";
@@ -84,7 +89,7 @@ export default function AdminLayout() {
               <NavLink key={n.label} to={n.to} data-testid={n.testid} onClick={() => setOpen(false)}
                 className={({ isActive }) => `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition ${isActive ? "text-white" : "text-slate-600 hover:bg-slate-100"}`}
                 style={({ isActive }) => (isActive ? { background: "hsl(var(--primary))" } : {})}>
-                <n.icon size={18} /> {n.label}
+                <n.icon size={18} /> <n.label />
               </NavLink>
             ) : (
               <div key={n.label} className="flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 cursor-not-allowed">
