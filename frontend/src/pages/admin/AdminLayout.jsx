@@ -27,7 +27,7 @@ const SUPER_NAV = [
 
 export default function AdminLayout() {
   const { user, logout } = useAuth();
-  const { tenant } = useTenant();
+  const { tenant, setTenant } = useTenant();
   const nav = useNavigate();
   const [open, setOpen] = useState(false);
   const [subscription, setSubscription] = useState(null);
@@ -59,7 +59,7 @@ export default function AdminLayout() {
       alive = false;
       window.clearInterval(timer);
     };
-  }, [user?.role, setTenant]);
+  }, [user?.role]);
 
   const doLogout = async () => { await logout(); nav("/login", { replace: true }); };
 
