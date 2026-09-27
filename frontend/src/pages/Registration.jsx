@@ -95,7 +95,7 @@ export default function Registration() {
         <div className="max-w-2xl mx-auto text-center">
           <span className="inline-flex items-center gap-2 rounded-full bg-violet-50 text-violet-700 px-4 py-1.5 text-xs font-semibold"><UserPlus size={14}/> Pendaftaran Sub-Admin</span>
           <h1 className="mt-4 font-display text-3xl sm:text-4xl font-extrabold text-slate-900">Mulai Kelola Bisnis WiFi Anda</h1>
-          <p className="mt-3 text-slate-500 leading-6">Isi data berikut. Setelah pendaftaran tersimpan, Anda akan melanjutkan ke tahap pembayaran.</p>
+          <p className="mt-3 text-slate-500 leading-6">Isi data berikut. Setelah menekan Daftar, pendaftaran langsung masuk status menunggu verifikasi Super Admin dan Anda diarahkan ke halaman pembayaran.</p>
         </div>
 
         <div className="mt-10 max-w-2xl mx-auto bg-white rounded-3xl border border-slate-200 shadow-sm p-6 sm:p-8">
@@ -142,7 +142,7 @@ export default function Registration() {
               )}
               <button type="submit" disabled={submitting} className="w-full h-12 rounded-xl text-white font-semibold inline-flex items-center justify-center gap-2 disabled:opacity-60" style={{background:"hsl(var(--primary))"}}>
                 {submitting ? <Loader2 size={18} className="animate-spin"/> : <ArrowRight size={18}/>}
-                {submitting ? "Menyimpan..." : "Lanjut"}
+                {submitting ? "Mendaftarkan..." : "Daftar"}
               </button>
             </form>
           )}
